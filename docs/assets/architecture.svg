@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <linearGradient id="gradPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="gradTeal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+    <linearGradient id="gradOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="gradRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <linearGradient id="gradGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="gradIndigo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <marker id="arrowGray" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="720" rx="16" fill="#0f172a"/>
+
+  <!-- Title -->
+  <text x="500" y="40" text-anchor="middle" fill="#f8fafc" font-size="20" font-weight="600">Streaks &amp; Bestie Points — System Architecture</text>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- Mobile App -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <rect x="430" y="60" width="140" height="52" rx="12" fill="url(#gradPurple)" filter="url(#shadow)"/>
+  <text x="500" y="83" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Mobile App</text>
+  <text x="500" y="100" text-anchor="middle" fill="#e0d4fc" font-size="10">iOS / Android</text>
+
+  <!-- Arrow: App → API GW -->
+  <line x1="500" y1="112" x2="500" y2="145" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowGray)"/>
+  <text x="515" y="133" fill="#94a3b8" font-size="9">REST</text>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- API Gateway -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <rect x="415" y="148" width="170" height="48" rx="10" fill="url(#gradIndigo)" filter="url(#shadow)"/>
+  <text x="500" y="170" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">API Gateway</text>
+  <text x="500" y="186" text-anchor="middle" fill="#c7d2fe" font-size="10">Auth · Throttle · Route</text>
+
+  <!-- Arrow: API GW → Lambda Ingestion -->
+  <line x1="500" y1="196" x2="500" y2="232" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowGray)"/>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- REAL-TIME PATH (left-center region) -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <rect x="30" y="220" width="540" height="310" rx="14" fill="none" stroke="#6366f1" stroke-width="1.2" stroke-dasharray="6,4" opacity="0.5"/>
+  <text x="50" y="244" fill="#a5b4fc" font-size="11" font-weight="600" letter-spacing="1">⚡  REAL-TIME PATH</text>
+
+  <!-- Lambda: Event Ingestion -->
+  <rect x="415" y="255" width="170" height="48" rx="10" fill="url(#gradPurple)" filter="url(#shadow)"/>
+  <text x="500" y="275" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Lambda</text>
+  <text x="500" y="292" text-anchor="middle" fill="#e0d4fc" font-size="10">Event Ingestion</text>
+
+  <!-- Arrow: Lambda → DynamoDB -->
+  <line x1="500" y1="303" x2="500" y2="345" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowGray)"/>
+
+  <!-- DynamoDB -->
+  <rect x="390" y="348" width="220" height="56" rx="10" fill="url(#gradBlue)" filter="url(#shadow)"/>
+  <text x="500" y="372" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">DynamoDB</text>
+  <text x="500" y="392" text-anchor="middle" fill="#bfdbfe" font-size="9.5">UserStreaks · BPEvents · DailyActivity</text>
+
+  <!-- ElastiCache Redis (right of Lambda Ingestion) -->
+  <rect x="120" y="255" width="155" height="48" rx="10" fill="url(#gradRed)" filter="url(#shadow)"/>
+  <text x="197" y="275" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">ElastiCache</text>
+  <text x="197" y="292" text-anchor="middle" fill="#fecaca" font-size="10">Redis Cache</text>
+
+  <!-- Arrow: Lambda Ingestion ←→ Redis (dashed read) -->
+  <line x1="415" y1="272" x2="275" y2="272" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrowDash)"/>
+  <text x="345" y="265" fill="#94a3b8" font-size="9">read cache</text>
+
+  <!-- DynamoDB Streams -->
+  <rect x="140" y="360" width="155" height="44" rx="10" fill="url(#gradTeal)" filter="url(#shadow)"/>
+  <text x="217" y="380" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">DDB Streams</text>
+  <text x="217" y="394" text-anchor="middle" fill="#ccfbf1" font-size="10">Change Data Capture</text>
+
+  <!-- Arrow: DynamoDB → Streams -->
+  <line x1="390" y1="376" x2="295" y2="376" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowGray)"/>
+
+  <!-- Lambda: Streak Processor -->
+  <rect x="100" y="430" width="170" height="48" rx="10" fill="url(#gradPurple)" filter="url(#shadow)"/>
+  <text x="185" y="450" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Lambda</text>
+  <text x="185" y="467" text-anchor="middle" fill="#e0d4fc" font-size="10">Streak Processor</text>
+
+  <!-- Arrow: Streams → Streak Processor -->
+  <line x1="217" y1="404" x2="195" y2="430" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowGray)"/>
+
+  <!-- Arrow: Streak Processor → DynamoDB -->
+  <path d="M 270 454 Q 430 454 460 404" fill="none" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arrowGray)"/>
+  <text x="370" y="447" fill="#94a3b8" font-size="9">update streak</text>
+
+  <!-- Arrow: Streak Processor → Redis -->
+  <path d="M 185 430 Q 185 340 197 303" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrowDash)"/>
+  <text x="145" y="365" fill="#94a3b8" font-size="9">invalidate</text>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- BATCH / ANALYTICS PATH (right region) -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <rect x="610" y="310" width="370" height="390" rx="14" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="6,4" opacity="0.5"/>
+  <text x="630" y="334" fill="#fcd34d" font-size="11" font-weight="600" letter-spacing="1">📊  BATCH / ANALYTICS PATH</text>
+
+  <!-- Arrow: DDB Streams → Firehose -->
+  <path d="M 240 404 Q 240 500 620 370" fill="none" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arrowGray)"/>
+
+  <!-- Kinesis Data Firehose -->
+  <rect x="660" y="348" width="170" height="48" rx="10" fill="url(#gradOrange)" filter="url(#shadow)"/>
+  <text x="745" y="368" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">Kinesis Firehose</text>
+  <text x="745" y="385" text-anchor="middle" fill="#fef3c7" font-size="10">Buffer → Parquet</text>
+
+  <!-- Arrow: Firehose → S3 Raw -->
+  <line x1="745" y1="396" x2="745" y2="430" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowGray)"/>
+
+  <!-- S3 Raw -->
+  <rect x="670" y="433" width="150" height="48" rx="10" fill="url(#gradOrange)" filter="url(#shadow)" opacity="0.85"/>
+  <text x="745" y="454" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">S3</text>
+  <text x="745" y="470" text-anchor="middle" fill="#fef3c7" font-size="10">Raw Events</text>
+
+  <!-- Arrow: S3 Raw → Glue -->
+  <line x1="745" y1="481" x2="745" y2="515" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowGray)"/>
+
+  <!-- AWS Glue -->
+  <rect x="660" y="518" width="170" height="48" rx="10" fill="url(#gradTeal)" filter="url(#shadow)"/>
+  <text x="745" y="538" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">AWS Glue</text>
+  <text x="745" y="555" text-anchor="middle" fill="#ccfbf1" font-size="10">PySpark · Dedup · Enrich</text>
+
+  <!-- Arrow: Glue → S3 Curated -->
+  <line x1="745" y1="566" x2="745" y2="600" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowGray)"/>
+
+  <!-- S3 Curated -->
+  <rect x="670" y="603" width="150" height="48" rx="10" fill="url(#gradGreen)" filter="url(#shadow)" opacity="0.85"/>
+  <text x="745" y="624" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">S3</text>
+  <text x="745" y="640" text-anchor="middle" fill="#dcfce7" font-size="10">Curated Layer</text>
+
+  <!-- Arrow: S3 Curated → Redshift -->
+  <line x1="745" y1="651" x2="745" y2="670" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrowGray)"/>
+
+  <!-- Redshift -->
+  <rect x="660" y="660" width="170" height="48" rx="10" fill="url(#gradGreen)" filter="url(#shadow)"/>
+  <text x="745" y="680" text-anchor="middle" fill="#fff" font-size="13" font-weight="600">Amazon Redshift</text>
+  <text x="745" y="696" text-anchor="middle" fill="#dcfce7" font-size="10">Analytics · BI · Dashboards</text>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- Legend -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <rect x="30" y="560" width="200" height="140" rx="10" fill="#1e293b" opacity="0.7"/>
+  <text x="50" y="582" fill="#cbd5e1" font-size="10" font-weight="600">LEGEND</text>
+  <rect x="50" y="592" width="14" height="14" rx="3" fill="url(#gradPurple)"/>
+  <text x="72" y="604" fill="#cbd5e1" font-size="10">Compute (Lambda)</text>
+  <rect x="50" y="614" width="14" height="14" rx="3" fill="url(#gradBlue)"/>
+  <text x="72" y="626" fill="#cbd5e1" font-size="10">Database (DynamoDB)</text>
+  <rect x="50" y="636" width="14" height="14" rx="3" fill="url(#gradRed)"/>
+  <text x="72" y="648" fill="#cbd5e1" font-size="10">Cache (Redis)</text>
+  <rect x="50" y="658" width="14" height="14" rx="3" fill="url(#gradOrange)"/>
+  <text x="72" y="670" fill="#cbd5e1" font-size="10">Streaming / Storage</text>
+  <rect x="50" y="680" width="14" height="14" rx="3" fill="url(#gradGreen)"/>
+  <text x="72" y="692" fill="#cbd5e1" font-size="10">Analytics (Redshift)</text>
+</svg>
