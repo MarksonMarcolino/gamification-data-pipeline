@@ -1,0 +1,65 @@
+site_name: "Gamification Data Pipeline — Streaks & Bestie Points"
+site_description: "Design document for Luzia's Streaks & Bestie Points gamification system"
+site_author: "Markson Marcolino"
+site_url: "https://marksonmarcolino.github.io/gamification-data-pipeline/"
+
+repo_name: MarksonMarcolino/gamification-data-pipeline
+repo_url: https://github.com/MarksonMarcolino/gamification-data-pipeline
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - "1. Data Modeling & System Design": data-modeling.md
+  - "2. ETL & Data Pipeline Design": etl-pipeline.md
+  - "3. Data Integrity & Anomaly Detection": data-integrity.md
