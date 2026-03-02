@@ -16,7 +16,7 @@ This document presents a **production-grade architecture** for Luzia's **Streaks
 
 ## Tech Stack
 
-![System Architecture](assets/architecture.svg)
+<object type="image/svg+xml" data="assets/architecture.svg" style="width:100%;max-width:1100px;"></object>
 
 ---
 
