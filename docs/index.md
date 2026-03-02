@@ -17,17 +17,41 @@ This document presents a **production-grade architecture** for Luzia's **Streaks
 ## Tech Stack
 
 ```mermaid
-graph LR
-    A[Mobile App] --> B[API Gateway]
-    B --> C[AWS Lambda]
-    C --> D[DynamoDB]
-    D --> E[DynamoDB Streams]
-    E --> F[Lambda Processor]
-    F --> G[ElastiCache Redis]
-    D --> H[Kinesis Data Firehose]
-    H --> I[S3 Data Lake]
-    I --> J[AWS Glue]
-    J --> K[Amazon Redshift]
+graph TD
+    App["📱 Mobile App"] -->|REST API| APIGW["API Gateway"]
+
+    subgraph real["⚡ Real-Time Path"]
+        APIGW --> Ingest["Lambda\nEvent Ingestion"]
+        Ingest --> DDB[("DynamoDB\n(UserStreaks · BPEvents · DailyActivity)")]
+        DDB --> Streams["DynamoDB Streams"]
+        Streams --> Processor["Lambda\nStreak Processor"]
+        Processor --> DDB
+        Processor --> Cache["ElastiCache\nRedis"]
+        Ingest -.->|read cache| Cache
+    end
+
+    subgraph batch["📊 Batch / Analytics Path"]
+        Streams --> Firehose["Kinesis\nData Firehose"]
+        Firehose --> S3Raw[("S3\nRaw Events")]
+        S3Raw --> Glue["AWS Glue\nPySpark ETL"]
+        Glue --> S3Cur[("S3\nCurated Layer")]
+        S3Cur --> Redshift[("Amazon\nRedshift")]
+    end
+
+    style real fill:#1a1a2e,stroke:#6c63ff,color:#fff
+    style batch fill:#1a1a2e,stroke:#f59e0b,color:#fff
+    style App fill:#6c63ff,stroke:#6c63ff,color:#fff
+    style APIGW fill:#4338ca,stroke:#4338ca,color:#fff
+    style Ingest fill:#7c3aed,stroke:#7c3aed,color:#fff
+    style DDB fill:#2563eb,stroke:#2563eb,color:#fff
+    style Streams fill:#0891b2,stroke:#0891b2,color:#fff
+    style Processor fill:#7c3aed,stroke:#7c3aed,color:#fff
+    style Cache fill:#dc2626,stroke:#dc2626,color:#fff
+    style Firehose fill:#ea580c,stroke:#ea580c,color:#fff
+    style S3Raw fill:#d97706,stroke:#d97706,color:#fff
+    style Glue fill:#ca8a04,stroke:#ca8a04,color:#fff
+    style S3Cur fill:#65a30d,stroke:#65a30d,color:#fff
+    style Redshift fill:#059669,stroke:#059669,color:#fff
 ```
 
 ---
