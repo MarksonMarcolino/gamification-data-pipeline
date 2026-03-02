@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://marksonmarcolino.github.io/gamification-data-pipeline/</loc>
+         <lastmod>2026-03-02</lastmod>
+    </url>
+    <url>
+         <loc>https://marksonmarcolino.github.io/gamification-data-pipeline/data-integrity/</loc>
+         <lastmod>2026-03-02</lastmod>
+    </url>
+    <url>
+         <loc>https://marksonmarcolino.github.io/gamification-data-pipeline/data-modeling/</loc>
+         <lastmod>2026-03-02</lastmod>
+    </url>
+    <url>
+         <loc>https://marksonmarcolino.github.io/gamification-data-pipeline/etl-pipeline/</loc>
+         <lastmod>2026-03-02</lastmod>
+    </url>
+</urlset>
