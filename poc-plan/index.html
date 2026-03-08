@@ -1,0 +1,1447 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Design document for Luzia's Streaks & Bestie Points gamification system">
+      
+      
+        <meta name="author" content="Markson Marcolino">
+      
+      
+        <link rel="canonical" href="https://marksonmarcolino.github.io/gamification-data-pipeline/poc-plan/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
+    
+    
+      
+        <title>POC: Gamification Data Pipeline — Local Simulation Notebook - Gamification Data Pipeline — Streaks & Bestie Points</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#poc-gamification-data-pipeline-local-simulation-notebook" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Gamification Data Pipeline — Streaks &amp; Bestie Points" class="md-header__button md-logo" aria-label="Gamification Data Pipeline — Streaks & Bestie Points" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Gamification Data Pipeline — Streaks & Bestie Points
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              POC: Gamification Data Pipeline — Local Simulation Notebook
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/MarksonMarcolino/gamification-data-pipeline" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarksonMarcolino/gamification-data-pipeline
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../data-modeling/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  1. Data Modeling & System Design
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../etl-pipeline/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  2. ETL & Data Pipeline Design
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../data-integrity/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  3. Data Integrity & Anomaly Detection
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Gamification Data Pipeline — Streaks &amp; Bestie Points" class="md-nav__button md-logo" aria-label="Gamification Data Pipeline — Streaks & Bestie Points" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Gamification Data Pipeline — Streaks & Bestie Points
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/MarksonMarcolino/gamification-data-pipeline" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarksonMarcolino/gamification-data-pipeline
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-modeling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Data Modeling & System Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../etl-pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. ETL & Data Pipeline Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-integrity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Data Integrity & Anomaly Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#files-to-create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files to Create
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Files to Create">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#requirementstxt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        requirements.txt
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notebook-structure-11-sections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notebook Structure (11 Sections)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Notebook Structure (11 Sections)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#section-1-setup-architecture-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 1: Setup &amp; Architecture Overview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-2-dynamodb-table-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 2: DynamoDB Table Creation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-3-sample-data-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 3: Sample Data Generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-4-real-time-path-event-ingestion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 4: Real-Time Path — Event Ingestion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-5-real-time-path-streak-processor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 5: Real-Time Path — Streak Processor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-6-cache-layer-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 6: Cache Layer Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-7-batch-etl-pandas-replacing-pysparkglue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 7: Batch ETL (pandas replacing PySpark/Glue)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-8-analytical-warehouse-sqlite-replacing-redshift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 8: Analytical Warehouse (SQLite replacing Redshift)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-9-visualizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 9: Visualizations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-10-bug-fix-summary-discussion-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 10: Bug Fix Summary &amp; Discussion Points
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#section-11-cleanup-teardown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Section 11: Cleanup &amp; Teardown
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-adaptations-from-production-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Adaptations from Production Code
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bug-fixes-included" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes Included
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automated-assertions-built-into-notebook-cells" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automated Assertions (built into notebook cells)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="poc-gamification-data-pipeline-local-simulation-notebook">POC: Gamification Data Pipeline — Local Simulation Notebook<a class="headerlink" href="#poc-gamification-data-pipeline-local-simulation-notebook" title="Permanent link">&para;</a></h1>
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>You have a complete design doc + code samples for the Luzia Streaks &amp; Bestie Points system (DynamoDB, Lambda, Glue, Redshift, Redis). The goal is to create a <strong>single Jupyter notebook</strong> that simulates the entire architecture locally with <strong>zero infrastructure</strong> — no Docker, no AWS account needed. This serves as a live demo during the interview, proving the design actually works.</p>
+<p><strong>Requirements:</strong> Python <strong>3.11+</strong> (for <code>datetime.UTC</code> and <code>ZoneInfo</code> stdlib support).</p>
+<p><strong>Local mock strategy:</strong></p>
+<table>
+<thead>
+<tr>
+<th>AWS Service</th>
+<th>Local Replacement</th>
+<th>Library</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DynamoDB</td>
+<td>In-memory mock</td>
+<td><code>moto</code></td>
+</tr>
+<tr>
+<td>Lambda</td>
+<td>Direct function calls</td>
+<td>Existing code, adapted</td>
+</tr>
+<tr>
+<td>Redis/ElastiCache</td>
+<td>In-memory mock</td>
+<td><code>fakeredis</code></td>
+</tr>
+<tr>
+<td>S3 + Glue (PySpark)</td>
+<td>pandas DataFrames</td>
+<td><code>pandas</code></td>
+</tr>
+<tr>
+<td>Redshift</td>
+<td>SQLite in-memory</td>
+<td><code>sqlite3</code> (stdlib)</td>
+</tr>
+<tr>
+<td>DynamoDB Streams</td>
+<td>Manual trigger after writes</td>
+<td>Custom simulation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="files-to-create">Files to Create<a class="headerlink" href="#files-to-create" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>gamification-data-pipeline/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  notebook/
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    requirements.txt                    # Python dependencies
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    gamification_pipeline_poc.ipynb     # The single Jupyter notebook
+</span></code></pre></div>
+<h3 id="requirementstxt"><code>requirements.txt</code><a class="headerlink" href="#requirementstxt" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>jupyter&gt;=1.0.0
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>moto[dynamodb,s3]&gt;=5.0.0
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>boto3&gt;=1.35.0
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>fakeredis&gt;=2.21.0
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>pandas&gt;=2.2.0
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>matplotlib&gt;=3.9.0
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>tabulate&gt;=0.9.0
+</span></code></pre></div>
+<hr />
+<h2 id="notebook-structure-11-sections">Notebook Structure (11 Sections)<a class="headerlink" href="#notebook-structure-11-sections" title="Permanent link">&para;</a></h2>
+<h3 id="section-1-setup-architecture-overview">Section 1: Setup &amp; Architecture Overview<a class="headerlink" href="#section-1-setup-architecture-overview" title="Permanent link">&para;</a></h3>
+<p><strong>Markdown cell:</strong>
+- Architecture diagram (Mermaid or ASCII) showing both real-time and batch paths
+- Mock-mapping table (above)
+- Python 3.11+ requirement note</p>
+<p><strong>Code cell — Environment &amp; imports:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">sqlite3</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">UTC</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">zoneinfo</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZoneInfo</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="kn">import</span><span class="w"> </span><span class="nn">boto3</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span><span class="o">,</span><span class="w"> </span><span class="nn">fakeredis</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">moto</span><span class="w"> </span><span class="kn">import</span> <span class="n">mock_aws</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="kn">from</span><span class="w"> </span><span class="nn">botocore.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClientError</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="c1"># Dummy AWS credentials — moto requires these even though nothing leaves the process</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;AWS_ACCESS_KEY_ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;testing&quot;</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;AWS_SECRET_ACCESS_KEY&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;testing&quot;</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;AWS_DEFAULT_REGION&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;us-east-1&quot;</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="c1"># Start moto mock — use .start() (not context manager) so state persists across cells</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="n">mock</span> <span class="o">=</span> <span class="n">mock_aws</span><span class="p">()</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="n">mock</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="c1"># Shared fakeredis instance — used by both event ingestion and streak processor</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="n">redis_client</span> <span class="o">=</span> <span class="n">fakeredis</span><span class="o">.</span><span class="n">FakeRedis</span><span class="p">(</span><span class="n">decode_responses</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></code></pre></div></p>
+<p><strong>Code cell — Shared utilities:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">decimal_to_native</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert DynamoDB Decimal types to Python int/float for pandas compatibility.&quot;&quot;&quot;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">):</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">decimal_to_native</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">decimal_to_native</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="k">return</span> <span class="n">obj</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">scan_table_to_df</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Scan a DynamoDB table and return a pandas DataFrame with native types.&quot;&quot;&quot;</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="n">items</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">scan</span><span class="p">()[</span><span class="s2">&quot;Items&quot;</span><span class="p">]</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">decimal_to_native</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">])</span>
+</span></code></pre></div></p>
+<p><strong>Code cell — Shared resources dict:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># All notebook sections reference this dict instead of module-level globals</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">resources</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="s2">&quot;dynamodb&quot;</span><span class="p">:</span> <span class="n">boto3</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s2">&quot;dynamodb&quot;</span><span class="p">,</span> <span class="n">region_name</span><span class="o">=</span><span class="s2">&quot;us-east-1&quot;</span><span class="p">),</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="s2">&quot;redis&quot;</span><span class="p">:</span> <span class="n">redis_client</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="s2">&quot;tables&quot;</span><span class="p">:</span> <span class="p">{},</span>   <span class="c1"># populated in Section 2</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<h3 id="section-2-dynamodb-table-creation">Section 2: DynamoDB Table Creation<a class="headerlink" href="#section-2-dynamodb-table-creation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Reuse logic from <code>code-samples/dynamodb/table_definitions.py</code></li>
+<li><strong>Bug Fix #2</strong>: Add <code>StreamSpecification</code> to DailyActivity table (already applied in source)</li>
+<li>Verification: <code>describe_table()</code> for each table, display schema as DataFrame</li>
+</ul>
+<p><strong>Verification cell:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;UserStreaks&quot;</span><span class="p">,</span> <span class="s2">&quot;BPEvents&quot;</span><span class="p">,</span> <span class="s2">&quot;DailyActivity&quot;</span><span class="p">]:</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">desc</span> <span class="o">=</span> <span class="n">resources</span><span class="p">[</span><span class="s2">&quot;dynamodb&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">describe_table</span><span class="p">(</span><span class="n">TableName</span><span class="o">=</span><span class="n">name</span><span class="p">)[</span><span class="s2">&quot;Table&quot;</span><span class="p">]</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">desc</span><span class="p">[</span><span class="s1">&#39;TableStatus&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, Keys: </span><span class="si">{</span><span class="n">desc</span><span class="p">[</span><span class="s1">&#39;KeySchema&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="k">if</span> <span class="n">desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GlobalSecondaryIndexes&quot;</span><span class="p">):</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        <span class="k">for</span> <span class="n">gsi</span> <span class="ow">in</span> <span class="n">desc</span><span class="p">[</span><span class="s2">&quot;GlobalSecondaryIndexes&quot;</span><span class="p">]:</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  GSI: </span><span class="si">{</span><span class="n">gsi</span><span class="p">[</span><span class="s1">&#39;IndexName&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">gsi</span><span class="p">[</span><span class="s1">&#39;KeySchema&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="k">if</span> <span class="n">desc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;StreamSpecification&quot;</span><span class="p">):</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Stream: </span><span class="si">{</span><span class="n">desc</span><span class="p">[</span><span class="s1">&#39;StreamSpecification&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div></p>
+<h3 id="section-3-sample-data-generation">Section 3: Sample Data Generation<a class="headerlink" href="#section-3-sample-data-generation" title="Permanent link">&para;</a></h3>
+<p><strong>Timestamp strategy:</strong> All event timestamps are generated <strong>relative to <code>datetime.now(UTC)</code></strong> at notebook runtime. This avoids the <code>validate_event()</code> rejection window (&gt;7 days in the past, &gt;24h in the future). The base date <code>T</code> is set to <code>today</code>, and all user scenarios are computed as offsets from <code>T</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">T</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span></code></pre></div>
+<p>6 users, each testing a different scenario:</p>
+<table>
+<thead>
+<tr>
+<th>User</th>
+<th>Timezone</th>
+<th>Scenario</th>
+<th>Date range (relative to T)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>usr_alice</code></td>
+<td><code>America/Sao_Paulo</code></td>
+<td>4-day streak, 1-day gap, 2-day restart</td>
+<td>T-6,T-5,T-4,T-3 (skip T-2), T-1,T-0</td>
+</tr>
+<tr>
+<td><code>usr_bob</code></td>
+<td><code>Asia/Tokyo</code></td>
+<td>Near-midnight activity (23:58 / 00:02 local)</td>
+<td>T-3 to T</td>
+</tr>
+<tr>
+<td><code>usr_carol</code></td>
+<td><code>Europe/London</code></td>
+<td>Events around DST boundary (March 29 2026 for UK)</td>
+<td>T-2 to T</td>
+</tr>
+<tr>
+<td><code>usr_dave</code></td>
+<td><code>America/New_York</code></td>
+<td>Sends duplicate events (same idempotency key repeated)</td>
+<td>T-2 to T</td>
+</tr>
+<tr>
+<td><code>usr_eve</code></td>
+<td><code>Pacific/Auckland</code></td>
+<td>Extreme UTC+13 offset, date boundary crossing</td>
+<td>T-3 to T</td>
+</tr>
+<tr>
+<td><code>usr_frank</code></td>
+<td><code>America/Sao_Paulo</code></td>
+<td>105 events in 1 hour (rate-limit test) + bad payloads</td>
+<td>T-1 to T</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Data generation rules:</strong>
+- ~100–150 total events in the exact API payload format from the docs
+- Vary <code>source</code> field across <code>mobile_app</code>, <code>web</code>, <code>whatsapp</code> for richer ETL/analytics
+- Vary <code>event_type</code> across all 4 types (<code>CONVERSATION_START</code>, <code>TOOL_USE</code>, <code>DAILY_OPEN</code>, <code>SHARE_RESULT</code>)
+- Dave's duplicates: reuse the <strong>same</strong> <code>idempotency_key</code> for 5+ events to test GSI dedup
+- Frank's burst: 105 events with timestamps within the same hour; 5 events with <code>event_type: "INVALID_TYPE"</code> for validation errors
+- Carol's DST: if the notebook runs in March near the UK DST transition, use the actual date; otherwise, simulate by having events on two consecutive days where <code>get_previous_date</code> must handle the timezone correctly
+- Use a <strong>seeded <code>random.Random(42)</code></strong> for reproducible UUIDs in idempotency keys (instead of <code>uuid4()</code> for test data generation only — production code still uses <code>uuid4</code>)</p>
+<p><strong>Output:</strong> Display the generated events DataFrame with columns: <code>user_id</code>, <code>event_type</code>, <code>client_timestamp</code>, <code>timezone</code>, <code>idempotency_key</code>, <code>source</code>.</p>
+<h3 id="section-4-real-time-path-event-ingestion">Section 4: Real-Time Path — Event Ingestion<a class="headerlink" href="#section-4-real-time-path-event-ingestion" title="Permanent link">&para;</a></h3>
+<p><strong>Adapt <code>event_ingestion.py</code> for the notebook:</strong>
+- Replace module-level <code>dynamodb</code>, <code>redis_client</code>, and table references with <code>resources</code> dict
+- Functions accept dependencies as parameters (dependency injection):
+  <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">process_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">bp_events_table</span><span class="p">,</span> <span class="n">daily_activity_table</span><span class="p">,</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>                  <span class="n">user_streaks_table</span><span class="p">,</span> <span class="n">redis_conn</span><span class="p">):</span>
+</span></code></pre></div></p>
+<p><strong>Bug Fix #1</strong>: GSI lookup on <code>IdempotencyIndex</code> before write (already applied in source).</p>
+<p><strong>Bug Fix #4</strong>: <code>check_rate_limit()</code> and <code>detect_timezone_abuse()</code> integrated (already applied in source).</p>
+<p><strong>Bug Fix #4a</strong> (new): Update <code>process_event()</code> to <strong>maintain <code>recent_tz_changes</code></strong> on UserStreaks when the timezone changes. Without this, <code>detect_timezone_abuse()</code> always reads an empty list and never triggers. Add after the UserStreaks update:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Track timezone changes for abuse detection</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">if</span> <span class="n">old_tz</span> <span class="ow">and</span> <span class="n">old_tz</span> <span class="o">!=</span> <span class="n">timezone</span><span class="p">:</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">user_streaks_table</span><span class="o">.</span><span class="n">update_item</span><span class="p">(</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>        <span class="n">Key</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="n">user_id</span><span class="p">},</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>        <span class="n">UpdateExpression</span><span class="o">=</span><span class="s2">&quot;SET recent_tz_changes = list_append(if_not_exists(recent_tz_changes, :empty), :change)&quot;</span><span class="p">,</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>        <span class="n">ExpressionAttributeValues</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>            <span class="s2">&quot;:empty&quot;</span><span class="p">:</span> <span class="p">[],</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>            <span class="s2">&quot;:change&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;timezone&quot;</span><span class="p">:</span> <span class="n">timezone</span><span class="p">,</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">utc_ts</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()}],</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>        <span class="p">},</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="p">)</span>
+</span></code></pre></div></p>
+<p><strong>Processing loop with progress tracking:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;processed&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;duplicate&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;rate_limited&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;validation_error&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">events</span><span class="p">):</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">process_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;processed&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="k">except</span> <span class="n">DuplicateEventError</span><span class="p">:</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;duplicate&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>    <span class="k">except</span> <span class="n">RateLimitError</span><span class="p">:</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;rate_limited&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>    <span class="k">except</span> <span class="n">ValidationError</span><span class="p">:</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;validation_error&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>        <span class="n">results</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Results: </span><span class="si">{</span><span class="n">results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div></p>
+<p><strong>Display cells:</strong>
+- Ingestion results summary table
+- BPEvents table as DataFrame (via <code>scan_table_to_df</code>)
+- DailyActivity table as DataFrame
+- UserStreaks table as DataFrame (note: streaks not yet computed — only BP and timezone set)</p>
+<p><strong>Programmatic assertions:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Dave&#39;s duplicates caught</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">dave_events</span> <span class="o">=</span> <span class="n">bp_events_df</span><span class="p">[</span><span class="n">bp_events_df</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;usr_dave&quot;</span><span class="p">]</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">dave_events</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">total_dave_events_sent</span><span class="p">,</span> <span class="s2">&quot;Dedup should have filtered Dave&#39;s duplicates&quot;</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1"># Frank&#39;s rate limiting</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">assert</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;rate_limited&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Frank&#39;s burst should trigger rate limiting&quot;</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="c1"># Frank&#39;s bad payloads</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="k">assert</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;validation_error&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;Frank&#39;s invalid event_types should be rejected&quot;</span>
+</span></code></pre></div></p>
+<h3 id="section-5-real-time-path-streak-processor">Section 5: Real-Time Path — Streak Processor<a class="headerlink" href="#section-5-real-time-path-streak-processor" title="Permanent link">&para;</a></h3>
+<p><strong>Adapt <code>streak_processor.py</code> for the notebook:</strong>
+- Replace module-level globals with <code>resources</code> dict parameters
+- Functions accept <code>user_streaks_table</code> and <code>redis_conn</code> as parameters</p>
+<p><strong>Bug Fix #3</strong>: <code>get_previous_date</code> uses timezone-aware arithmetic (already applied in source).</p>
+<p><strong>Stream simulation strategy:</strong>
+moto doesn't emit real DynamoDB Stream events. Simulate by:
+1. Scan <code>DailyActivity</code> table
+2. Sort records by <code>(user_id, activity_date)</code> — this ensures chronological processing per user
+3. For each record, call <code>process_streak_update(user_id, activity_date, ...)</code></p>
+<p><strong>Critical: Handle the <code>initialize_user</code> race condition:</strong>
+Event ingestion (Section 4) already created UserStreaks records via <code>update_item</code> (with <code>ADD total_bestie_points</code> and <code>SET timezone</code>). These records exist but have NO streak fields (<code>current_streak</code>, <code>longest_streak</code>, <code>last_activity_date</code>, <code>version</code>). The streak processor handles this correctly:
+- <code>get_item</code> returns the existing item (so <code>initialize_user</code> is NOT called)
+- <code>user.get("current_streak", 0)</code> → 0 (field missing, defaults to 0)
+- <code>user.get("version", 0)</code> → 0
+- The update adds the streak fields without overwriting <code>total_bestie_points</code> (since it uses <code>SET</code> for streak fields, not <code>PUT</code>)</p>
+<p>The <code>initialize_user</code> path is only hit if a DailyActivity record exists for a user who has NO UserStreaks record at all — which can't happen in our simulation since event ingestion runs first.</p>
+<p><strong>Display cells:</strong>
+- UserStreaks table as DataFrame (now with streak data populated)
+- Redis cache state: iterate <code>streak:*</code> keys and display as DataFrame
+- Per-user streak summary: user_id, current_streak, longest_streak, last_activity_date</p>
+<p><strong>Programmatic assertions:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">alice</span> <span class="o">=</span> <span class="n">streaks_df</span><span class="p">[</span><span class="n">streaks_df</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;usr_alice&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">assert</span> <span class="n">alice</span><span class="p">[</span><span class="s2">&quot;longest_streak&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Alice longest should be 4, got </span><span class="si">{</span><span class="n">alice</span><span class="p">[</span><span class="s1">&#39;longest_streak&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">assert</span> <span class="n">alice</span><span class="p">[</span><span class="s2">&quot;current_streak&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Alice current should be 2, got </span><span class="si">{</span><span class="n">alice</span><span class="p">[</span><span class="s1">&#39;current_streak&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">bob</span> <span class="o">=</span> <span class="n">streaks_df</span><span class="p">[</span><span class="n">streaks_df</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;usr_bob&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">assert</span> <span class="n">bob</span><span class="p">[</span><span class="s2">&quot;current_streak&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Bob&#39;s near-midnight events should count as consecutive days&quot;</span>
+</span></code></pre></div></p>
+<h3 id="section-6-cache-layer-verification">Section 6: Cache Layer Verification<a class="headerlink" href="#section-6-cache-layer-verification" title="Permanent link">&para;</a></h3>
+<p><strong>Read path demonstration:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_user_streak</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">user_streaks_table</span><span class="p">,</span> <span class="n">redis_conn</span><span class="p">):</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Read path: Redis first, fallback to DynamoDB.&quot;&quot;&quot;</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">cached</span> <span class="o">=</span> <span class="n">redis_conn</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;streak:</span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="k">if</span> <span class="n">cached</span><span class="p">:</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">cached</span><span class="p">),</span> <span class="s2">&quot;cache_hit&quot;</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="c1"># Cache miss — read from DynamoDB</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="n">response</span> <span class="o">=</span> <span class="n">user_streaks_table</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span><span class="n">Key</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="n">user_id</span><span class="p">})</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="n">item</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Item&quot;</span><span class="p">,</span> <span class="p">{})</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="k">return</span> <span class="n">decimal_to_native</span><span class="p">(</span><span class="n">item</span><span class="p">),</span> <span class="s2">&quot;cache_miss&quot;</span>
+</span></code></pre></div></p>
+<p><strong>Verification cells:</strong>
+- For each user, call <code>get_user_streak()</code> and show hit/miss status
+- Compare DynamoDB vs Redis state side-by-side — should match for streak fields
+- Display Redis rate-limit keys (<code>rate:*</code>) with current counts
+- Display Redis processed-event sets (<code>processed:*</code>)
+- <strong>Force a cache miss</strong> by deleting a key, then re-read to show the fallback path</p>
+<p><strong>Programmatic assertions:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">user_ids</span><span class="p">:</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">dynamo_data</span> <span class="o">=</span> <span class="n">get_from_dynamodb</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="n">redis_data</span> <span class="o">=</span> <span class="n">get_from_redis</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="k">assert</span> <span class="n">dynamo_data</span><span class="p">[</span><span class="s2">&quot;current_streak&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">redis_data</span><span class="p">[</span><span class="s2">&quot;current_streak&quot;</span><span class="p">],</span> \
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>        <span class="sa">f</span><span class="s2">&quot;Cache mismatch for </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">&quot;</span>
+</span></code></pre></div></p>
+<h3 id="section-7-batch-etl-pandas-replacing-pysparkglue">Section 7: Batch ETL (pandas replacing PySpark/Glue)<a class="headerlink" href="#section-7-batch-etl-pandas-replacing-pysparkglue" title="Permanent link">&para;</a></h3>
+<p><strong>Data extraction:</strong> Scan BPEvents from DynamoDB (moto) into a pandas DataFrame using <code>scan_table_to_df()</code>.</p>
+<p><strong>Translate <code>code-samples/glue/etl_job.py</code> logic to pandas:</strong></p>
+<table>
+<thead>
+<tr>
+<th>PySpark Operation</th>
+<th>pandas Equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Window.partitionBy("idempotency_key").orderBy(...)</code></td>
+<td><code>df.sort_values("created_at").drop_duplicates("idempotency_key", keep="first")</code></td>
+</tr>
+<tr>
+<td><code>F.col("points_awarded").cast("integer")</code></td>
+<td><code>df["points_awarded"].astype(int)</code></td>
+</tr>
+<tr>
+<td><code>F.when(condition, value).otherwise(default)</code></td>
+<td><code>np.where(condition, value, default)</code></td>
+</tr>
+<tr>
+<td><code>df.groupBy(...).agg(...)</code></td>
+<td><code>df.groupby(...).agg(...)</code></td>
+</tr>
+<tr>
+<td><code>spark.read.parquet(USER_DIM_PATH)</code></td>
+<td>Hardcoded <code>pd.DataFrame</code> with user dimensions</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Steps:</strong>
+1. <strong>Dedup</strong> by <code>idempotency_key</code> via <code>drop_duplicates(subset="idempotency_key", keep="first")</code>
+2. <strong>Schema validation</strong> — cast types, flag anomalous records (<code>points_awarded &lt; 0</code> or <code>&gt; 100</code>)
+3. <strong>Enrich</strong> with user dimension data (hardcoded DataFrame):
+   <div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">user_dim</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;usr_alice&quot;</span><span class="p">,</span> <span class="s2">&quot;country&quot;</span><span class="p">:</span> <span class="s2">&quot;BR&quot;</span><span class="p">,</span> <span class="s2">&quot;signup_date&quot;</span><span class="p">:</span> <span class="s2">&quot;2025-01-15&quot;</span><span class="p">,</span> <span class="s2">&quot;user_segment&quot;</span><span class="p">:</span> <span class="s2">&quot;power_user&quot;</span><span class="p">},</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="p">{</span><span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;usr_bob&quot;</span><span class="p">,</span>   <span class="s2">&quot;country&quot;</span><span class="p">:</span> <span class="s2">&quot;JP&quot;</span><span class="p">,</span> <span class="s2">&quot;signup_date&quot;</span><span class="p">:</span> <span class="s2">&quot;2025-02-20&quot;</span><span class="p">,</span> <span class="s2">&quot;user_segment&quot;</span><span class="p">:</span> <span class="s2">&quot;casual&quot;</span><span class="p">},</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="o">...</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="p">])</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="n">enriched_df</span> <span class="o">=</span> <span class="n">clean_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">user_dim</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;user_id&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+4. <strong>Compute daily aggregates</strong> via <code>groupby(["user_id", "event_date"]).agg(...)</code></p>
+<p><strong>Display cells:</strong>
+- Dedup funnel: raw count → deduped count → anomaly-free count → enriched count
+- Anomalies table (if any)
+- Daily summaries DataFrame
+- Save <code>enriched_df</code> and <code>daily_summaries_df</code> for Section 8</p>
+<p><strong>Programmatic assertions:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">deduped_df</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw_df</span><span class="p">),</span> <span class="s2">&quot;Dedup should remove some records&quot;</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">enriched_df</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">clean_df</span><span class="p">),</span> <span class="s2">&quot;Enrichment should not change row count&quot;</span>
+</span></code></pre></div></p>
+<h3 id="section-8-analytical-warehouse-sqlite-replacing-redshift">Section 8: Analytical Warehouse (SQLite replacing Redshift)<a class="headerlink" href="#section-8-analytical-warehouse-sqlite-replacing-redshift" title="Permanent link">&para;</a></h3>
+<p><strong>SQLite adaptations from Redshift DDL:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Redshift Feature</th>
+<th>SQLite Equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DISTKEY</code>, <code>SORTKEY</code></td>
+<td>Removed (SQLite has no distribution)</td>
+</tr>
+<tr>
+<td><code>TIMESTAMP WITH TIME ZONE</code></td>
+<td><code>TEXT</code> (store ISO 8601 strings)</td>
+</tr>
+<tr>
+<td><code>GETDATE()</code></td>
+<td><code>datetime('now')</code></td>
+</tr>
+<tr>
+<td><code>DATE_TRUNC('week', event_date)</code></td>
+<td><code>date(event_date, 'weekday 0', '-6 days')</code></td>
+</tr>
+<tr>
+<td><code>CREATE TABLE ... (LIKE ...)</code></td>
+<td><code>CREATE TABLE ... AS SELECT * FROM ... WHERE 0</code></td>
+</tr>
+<tr>
+<td><code>VARCHAR(N)</code></td>
+<td><code>TEXT</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Steps:</strong>
+1. Create SQLite in-memory database: <code>conn = sqlite3.connect(":memory:")</code>
+2. Create tables: <code>fact_bp_events</code>, <code>fact_daily_summaries</code>, <code>dim_user_streaks</code>, <code>stg_bp_events</code>
+3. Load curated DataFrames from Section 7: <code>enriched_df.to_sql("fact_bp_events", conn, ...)</code>
+4. Load UserStreaks snapshot from DynamoDB scan: <code>streaks_df.to_sql("dim_user_streaks", conn, ...)</code>
+5. Run analytical queries (adapted from the 3 Redshift views):
+   - <strong>Weekly stats</strong>: active users, avg points, avg events by week and country
+   - <strong>Streak distribution</strong>: user counts bucketed by streak length (0, 1-3, 4-7, 8-14, 15-30, 30+)
+   - <strong>Event type performance</strong>: event counts, total points, unique users by event type and date
+6. <strong>Demo staging + merge pattern:</strong>
+   <div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Simulate Redshift COPY → staging → merge</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">new_batch_df</span><span class="o">.</span><span class="n">to_sql</span><span class="p">(</span><span class="s2">&quot;stg_bp_events&quot;</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">if_exists</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="s2">    DELETE FROM fact_bp_events WHERE idempotency_key IN</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="s2">    (SELECT idempotency_key FROM stg_bp_events)</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;INSERT INTO fact_bp_events SELECT * FROM stg_bp_events&quot;</span><span class="p">)</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;DELETE FROM stg_bp_events&quot;</span><span class="p">)</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</span></code></pre></div></p>
+<p><strong>Display cells:</strong>
+- Each analytical query result as a DataFrame
+- Staging merge before/after row counts</p>
+<h3 id="section-9-visualizations">Section 9: Visualizations<a class="headerlink" href="#section-9-visualizations" title="Permanent link">&para;</a></h3>
+<p>4 charts with matplotlib (<code>%matplotlib inline</code> in first cell):</p>
+<ol>
+<li><strong>Streak Timeline</strong> — line chart per user (x: date, y: streak count). Shows Alice's 4→0→2 pattern clearly.</li>
+<li><strong>BP Accumulation</strong> — cumulative points per user over time. Shows Frank's plateau when rate-limited.</li>
+<li><strong>Streak Distribution</strong> — bar chart from the analytical view (streak buckets on x-axis, user counts on y-axis).</li>
+<li><strong>Dedup Funnel</strong> — horizontal bar chart: raw events → deduped → anomaly-free → warehouse loaded. Shows data quality pipeline stages.</li>
+</ol>
+<p><strong>Chart formatting:</strong>
+- Use <code>plt.style.use("seaborn-v0_8-whitegrid")</code> for clean appearance
+- Include titles, axis labels, and legends
+- Use <code>fig, axes = plt.subplots(2, 2, figsize=(14, 10))</code> for a 2x2 grid
+- <code>plt.tight_layout()</code> to prevent label overlap</p>
+<h3 id="section-10-bug-fix-summary-discussion-points">Section 10: Bug Fix Summary &amp; Discussion Points<a class="headerlink" href="#section-10-bug-fix-summary-discussion-points" title="Permanent link">&para;</a></h3>
+<p><strong>Markdown cell — Bug fixes table (6 issues identified, 4 code-level fixes):</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>File</th>
+<th>Problem</th>
+<th>Fix</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>event_ingestion.py</code></td>
+<td><code>attribute_not_exists</code> on new item always passes — dedup broken</td>
+<td>Query <code>IdempotencyIndex</code> GSI before write (Layer 2)</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>table_definitions.py</code></td>
+<td>No <code>StreamSpecification</code> on DailyActivity</td>
+<td>Add <code>StreamEnabled: True, StreamViewType: NEW_IMAGE</code></td>
+<td>High</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>streak_processor.py</code></td>
+<td><code>get_previous_date</code> ignores <code>timezone</code> param — DST-unsafe</td>
+<td>Use timezone-aware datetime with noon anchor</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>event_ingestion.py</code></td>
+<td>Rate limiting / anomaly detection not integrated</td>
+<td>Add <code>check_rate_limit()</code> + <code>detect_timezone_abuse()</code> calls + maintain <code>recent_tz_changes</code></td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>data-modeling.md</code></td>
+<td>Architecture diagram shows <code>DAX / ElastiCache</code> but code uses Redis only</td>
+<td>Changed to <code>ElastiCache Redis</code> — Redis supports computed aggregates, rate limiting, processed-event sets that DAX cannot</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>event_ingestion.py</code></td>
+<td>3 sequential writes (BPEvents → DailyActivity → UserStreaks) are not atomic</td>
+<td>Documented trade-off; nightly reconciliation job detects/repairs inconsistencies</td>
+<td>Design</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Markdown cell — Interview talking points:</strong>
+- <strong>DynamoDB vs Aurora</strong>: HTTP-based (no connection pooling), auto-scaling, conditional writes for optimistic locking, Streams for CDC. Aurora would work at moderate scale but requires connection management and read replicas.
+- <strong>Write-through cache</strong>: streak data must be immediately consistent — user should see updated streak instantly. Write-behind would introduce a staleness window.
+- <strong>Optimistic locking</strong>: <code>version</code> attribute prevents concurrent Lambda invocations from overwriting each other. Retry on <code>ConditionalCheckFailedException</code> re-reads fresh state.
+- <strong>Timezone as first-class concern</strong>: all dates derived server-side from <code>client_timestamp</code> + <code>timezone</code>. Never trust client date calculation. <code>activity_date</code> is always in the user's local timezone.
+- <strong>Multi-layer dedup</strong>: Layer 1 (client key) → Layer 2 (GSI lookup) → Layer 3 (conditional write). Each layer catches different failure modes.
+- <strong>Atomicity trade-off</strong>: DynamoDB doesn't support efficient cross-table transactions at scale. Accept eventual consistency with nightly reconciliation rather than pay the latency/cost of <code>TransactWriteItems</code>.</p>
+<h3 id="section-11-cleanup-teardown">Section 11: Cleanup &amp; Teardown<a class="headerlink" href="#section-11-cleanup-teardown" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Stop moto mock — release all in-memory DynamoDB state</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">mock</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># Clear any lingering environment variables</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;AWS_ACCESS_KEY_ID&quot;</span><span class="p">,</span> <span class="s2">&quot;AWS_SECRET_ACCESS_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;AWS_DEFAULT_REGION&quot;</span><span class="p">]:</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All mocks stopped. Notebook complete.&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="key-adaptations-from-production-code">Key Adaptations from Production Code<a class="headerlink" href="#key-adaptations-from-production-code" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>moto context</strong>: Use <code>mock.start()</code> at notebook top, <code>mock.stop()</code> in Section 11 (not decorator/context-manager, so state persists across cells)</li>
+<li><strong>Decimal handling</strong>: DynamoDB returns <code>Decimal</code> — <code>decimal_to_native()</code> utility defined in Section 1, used in Sections 4, 5, 6, and 7 wherever DynamoDB scan results are converted to DataFrames</li>
+<li><strong>Stream simulation</strong>: moto doesn't emit real stream events — Section 5 scans DailyActivity sorted by <code>(user_id, activity_date)</code> and calls <code>process_streak_update()</code> for each record chronologically</li>
+<li><strong>Dependency injection</strong>: Instead of module-level globals, all functions accept tables/redis as parameters via the <code>resources</code> dict. This makes the notebook testable and avoids import-time side effects.</li>
+<li><strong>Timestamp generation</strong>: All test event timestamps are computed relative to <code>datetime.now(UTC)</code> to stay within the <code>validate_event()</code> acceptance window (≤7 days in the past, ≤24h in the future)</li>
+<li><strong><code>recent_tz_changes</code> maintenance</strong>: The notebook's adapted <code>process_event()</code> appends to <code>recent_tz_changes</code> on UserStreaks when a timezone change is detected, enabling <code>detect_timezone_abuse()</code> to actually trigger</li>
+</ol>
+<hr />
+<h2 id="bug-fixes-included">Bug Fixes Included<a class="headerlink" href="#bug-fixes-included" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>File</th>
+<th>Problem</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>event_ingestion.py</code></td>
+<td><code>attribute_not_exists</code> on new item always passes — dedup broken</td>
+<td>Query <code>IdempotencyIndex</code> GSI before write</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>table_definitions.py</code></td>
+<td>No <code>StreamSpecification</code> on tables</td>
+<td>Add <code>StreamEnabled: True, StreamViewType: NEW_IMAGE</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>streak_processor.py</code></td>
+<td><code>get_previous_date</code> ignores <code>timezone</code> param</td>
+<td>Use timezone-aware datetime arithmetic with noon anchor</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>event_ingestion.py</code></td>
+<td>Rate limiting / anomaly detection not integrated</td>
+<td>Add <code>check_rate_limit()</code> + <code>detect_timezone_abuse()</code> calls</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>data-modeling.md</code></td>
+<td>Diagram shows <code>DAX / ElastiCache</code> — code uses Redis</td>
+<td>Updated to <code>ElastiCache Redis</code> consistently</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>event_ingestion.py</code></td>
+<td>3 sequential writes are not atomic</td>
+<td>Documented trade-off + nightly reconciliation reference</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
+<h3 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ensure Python <strong>3.11+</strong>: <code>python --version</code></li>
+<li><code>pip install -r notebook/requirements.txt</code></li>
+<li><code>jupyter notebook notebook/gamification_pipeline_poc.ipynb</code></li>
+<li><strong>Kernel → Restart &amp; Run All</strong> — should complete with zero errors</li>
+</ol>
+<h3 id="automated-assertions-built-into-notebook-cells">Automated Assertions (built into notebook cells)<a class="headerlink" href="#automated-assertions-built-into-notebook-cells" title="Permanent link">&para;</a></h3>
+<p>All of these are <code>assert</code> statements that fail loudly if the condition is not met:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Section</th>
+<th>Assertion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dave's duplicates caught</td>
+<td>4</td>
+<td>Unique events for Dave &lt; total events sent</td>
+</tr>
+<tr>
+<td>Frank's rate limiting works</td>
+<td>4</td>
+<td><code>results["rate_limited"] &gt; 0</code></td>
+</tr>
+<tr>
+<td>Frank's bad payloads rejected</td>
+<td>4</td>
+<td><code>results["validation_error"] &gt;= 5</code></td>
+</tr>
+<tr>
+<td>Alice's streak: 4 → break → 2</td>
+<td>5</td>
+<td><code>longest_streak == 4</code>, <code>current_streak == 2</code></td>
+</tr>
+<tr>
+<td>Bob's near-midnight events consecutive</td>
+<td>5</td>
+<td><code>current_streak &gt;= 2</code></td>
+</tr>
+<tr>
+<td>Carol's DST-boundary dates correct</td>
+<td>5</td>
+<td>Streak increments across DST change</td>
+</tr>
+<tr>
+<td>Eve's UTC+13 offset handled</td>
+<td>5</td>
+<td>Activity dates are in NZ local time, streak is correct</td>
+</tr>
+<tr>
+<td>Cache matches DynamoDB</td>
+<td>6</td>
+<td><code>dynamo_streak == redis_streak</code> for all users</td>
+</tr>
+<tr>
+<td>Dedup removes records in ETL</td>
+<td>7</td>
+<td><code>len(deduped) &lt; len(raw)</code></td>
+</tr>
+<tr>
+<td>Enrichment preserves row count</td>
+<td>7</td>
+<td><code>len(enriched) == len(clean)</code></td>
+</tr>
+<tr>
+<td>BP reconciliation</td>
+<td>6</td>
+<td><code>sum(BPEvents.points)</code> per user == <code>UserStreaks.total_bestie_points</code></td>
+</tr>
+<tr>
+<td>SQLite views return data</td>
+<td>8</td>
+<td><code>len(weekly_stats) &gt; 0</code>, <code>len(streak_dist) &gt; 0</code>, <code>len(event_perf) &gt; 0</code></td>
+</tr>
+<tr>
+<td>All 4 charts render</td>
+<td>9</td>
+<td>No exceptions during <code>plt.show()</code></td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,1241 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Design document for Luzia's Streaks & Bestie Points gamification system">
+      
+      
+        <meta name="author" content="Markson Marcolino">
+      
+      
+        <link rel="canonical" href="https://marksonmarcolino.github.io/gamification-data-pipeline/etl-pipeline/">
+      
+      
+        <link rel="prev" href="../data-modeling/">
+      
+      
+        <link rel="next" href="../data-integrity/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
+    
+    
+      
+        <title>2. ETL & Data Pipeline Design - Gamification Data Pipeline — Streaks & Bestie Points</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#2-etl-data-pipeline-design" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Gamification Data Pipeline — Streaks &amp; Bestie Points" class="md-header__button md-logo" aria-label="Gamification Data Pipeline — Streaks & Bestie Points" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Gamification Data Pipeline — Streaks & Bestie Points
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              2. ETL & Data Pipeline Design
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/MarksonMarcolino/gamification-data-pipeline" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarksonMarcolino/gamification-data-pipeline
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../data-modeling/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  1. Data Modeling & System Design
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  2. ETL & Data Pipeline Design
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../data-integrity/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  3. Data Integrity & Anomaly Detection
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Gamification Data Pipeline — Streaks &amp; Bestie Points" class="md-nav__button md-logo" aria-label="Gamification Data Pipeline — Streaks & Bestie Points" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Gamification Data Pipeline — Streaks & Bestie Points
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/MarksonMarcolino/gamification-data-pipeline" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    MarksonMarcolino/gamification-data-pipeline
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-modeling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Data Modeling & System Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. ETL & Data Pipeline Design
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. ETL & Data Pipeline Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-time-path-event-ingestion-to-streak-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Path: Event Ingestion to Streak Update
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Real-Time Path: Event Ingestion to Streak Update">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-event-ingestion-api-gateway-lambda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Event Ingestion (API Gateway → Lambda)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-streak-processing-dynamodb-streams-lambda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Streak Processing (DynamoDB Streams → Lambda)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-cache-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Cache Update
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#batch-path-dynamodb-s3-glue-redshift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Path: DynamoDB → S3 → Glue → Redshift
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Batch Path: DynamoDB → S3 → Glue → Redshift">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kinesis-data-firehose-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kinesis Data Firehose Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-glue-etl-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AWS Glue ETL Job
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redshift-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redshift Loading
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#timezone-handling-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timezone Handling Strategy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Timezone Handling Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-solution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Solution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#orchestration-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orchestration &amp; Monitoring
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Orchestration &amp; Monitoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-functions-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Functions Workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitoring-alerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitoring &amp; Alerts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-integrity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Data Integrity & Anomaly Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#real-time-path-event-ingestion-to-streak-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Path: Event Ingestion to Streak Update
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Real-Time Path: Event Ingestion to Streak Update">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-event-ingestion-api-gateway-lambda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Event Ingestion (API Gateway → Lambda)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-streak-processing-dynamodb-streams-lambda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Streak Processing (DynamoDB Streams → Lambda)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-cache-update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Cache Update
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#batch-path-dynamodb-s3-glue-redshift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Path: DynamoDB → S3 → Glue → Redshift
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Batch Path: DynamoDB → S3 → Glue → Redshift">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kinesis-data-firehose-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kinesis Data Firehose Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-glue-etl-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AWS Glue ETL Job
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redshift-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redshift Loading
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#timezone-handling-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timezone Handling Strategy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Timezone Handling Strategy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-solution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Solution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#orchestration-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orchestration &amp; Monitoring
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Orchestration &amp; Monitoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-functions-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Functions Workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#monitoring-alerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitoring &amp; Alerts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="2-etl-data-pipeline-design">2. ETL &amp; Data Pipeline Design<a class="headerlink" href="#2-etl-data-pipeline-design" title="Permanent link">&para;</a></h1>
+<h2 id="end-to-end-architecture">End-to-End Architecture<a class="headerlink" href="#end-to-end-architecture" title="Permanent link">&para;</a></h2>
+<p>The pipeline has two paths: a <strong>real-time path</strong> for instant user feedback and a <strong>batch path</strong> for analytics and reporting.</p>
+<pre class="mermaid"><code>graph LR
+    subgraph "Data Collection"
+        App[Mobile App] --&gt; APIGW[API Gateway]
+    end
+
+    subgraph "Real-Time Path"
+        APIGW --&gt; L1[Lambda: Ingestion]
+        L1 --&gt; DDB[(DynamoDB)]
+        DDB --&gt; Streams[DDB Streams]
+        Streams --&gt; L2[Lambda: Streak Processor]
+        L2 --&gt; DDB
+        L2 --&gt; Redis[ElastiCache]
+    end
+
+    subgraph "Batch Path"
+        Streams --&gt; KDF[Kinesis Data Firehose]
+        KDF --&gt; S3R[(S3: Raw)]
+        S3R --&gt; Glue[AWS Glue ETL]
+        Glue --&gt; S3C[(S3: Curated)]
+        S3C --&gt; RS[(Redshift)]
+    end</code></pre>
+<hr />
+<h2 id="real-time-path-event-ingestion-to-streak-update">Real-Time Path: Event Ingestion to Streak Update<a class="headerlink" href="#real-time-path-event-ingestion-to-streak-update" title="Permanent link">&para;</a></h2>
+<h3 id="step-1-event-ingestion-api-gateway-lambda">Step 1 — Event Ingestion (API Gateway → Lambda)<a class="headerlink" href="#step-1-event-ingestion-api-gateway-lambda" title="Permanent link">&para;</a></h3>
+<p>The mobile app sends events via REST API. Each event represents a user interaction.</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;user_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;usr_abc123&quot;</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;event_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CONVERSATION_START&quot;</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;client_timestamp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2025-03-15T14:30:00-03:00&quot;</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">&quot;timezone&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;America/Sao_Paulo&quot;</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">&quot;idempotency_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;usr_abc123:CONV:2025-03-15T14:30:00&quot;</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mobile_app&quot;</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">&quot;app_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;4.2.1&quot;</span><span class="p">,</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">&quot;device_os&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;iOS 18.1&quot;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>The <strong>ingestion Lambda</strong> performs:</p>
+<ol>
+<li><strong>Validate</strong> the payload (schema, required fields, timestamp sanity)</li>
+<li><strong>Deduplicate</strong> — check the <code>IdempotencyIndex</code> GSI on <code>BPEvents</code> table</li>
+<li><strong>Normalize timestamp</strong> — convert <code>client_timestamp</code> to UTC and to the user's local date</li>
+<li><strong>Write</strong> to <code>BPEvents</code> table with conditional put (fails if <code>idempotency_key</code> exists)</li>
+<li><strong>Award points</strong> — atomically increment <code>total_bestie_points</code> on <code>UserStreaks</code></li>
+</ol>
+<h3 id="step-2-streak-processing-dynamodb-streams-lambda">Step 2 — Streak Processing (DynamoDB Streams → Lambda)<a class="headerlink" href="#step-2-streak-processing-dynamodb-streams-lambda" title="Permanent link">&para;</a></h3>
+<p>DynamoDB Streams triggers a Lambda on every write to <code>DailyActivity</code>. The <strong>streak processor</strong> Lambda:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[DDB Stream Event:&lt;br/&gt;New DailyActivity record] --&gt; B{Is this the first&lt;br/&gt;activity today?}
+    B --&gt;|No| Z[Skip — streak already updated]
+    B --&gt;|Yes| C[Read UserStreaks&lt;br/&gt;for this user]
+    C --&gt; D{last_activity_date?}
+    D --&gt;|Yesterday| E[Increment current_streak]
+    D --&gt;|Today| Z
+    D --&gt;|Older / null| F[Reset current_streak = 1]
+    E --&gt; G{current_streak &gt;&lt;br/&gt;longest_streak?}
+    G --&gt;|Yes| H[Update longest_streak]
+    G --&gt;|No| I[Keep longest_streak]
+    H --&gt; J[Conditional write&lt;br/&gt;to UserStreaks]
+    I --&gt; J
+    F --&gt; J
+    J --&gt; K[Invalidate cache]</code></pre>
+<p><strong>Key design decisions:</strong></p>
+<ul>
+<li><strong>Conditional writes</strong> (<code>version</code> attribute) prevent race conditions when multiple events arrive simultaneously</li>
+<li><strong>Stream processing is idempotent</strong> — if the Lambda retries, re-applying the same streak logic produces the same result</li>
+<li>The Lambda converts all dates to the <strong>user's local timezone</strong> before comparing</li>
+</ul>
+<h3 id="step-3-cache-update">Step 3 — Cache Update<a class="headerlink" href="#step-3-cache-update" title="Permanent link">&para;</a></h3>
+<p>After updating DynamoDB, the Lambda does a <strong>write-through</strong> to ElastiCache Redis:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">redis_client</span><span class="o">.</span><span class="n">setex</span><span class="p">(</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="sa">f</span><span class="s2">&quot;streak:</span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">ttl</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>  <span class="c1"># 5 minutes</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">value</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="s2">&quot;current_streak&quot;</span><span class="p">:</span> <span class="n">new_streak</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>        <span class="s2">&quot;total_bestie_points&quot;</span><span class="p">:</span> <span class="n">new_bp</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        <span class="s2">&quot;longest_streak&quot;</span><span class="p">:</span> <span class="n">longest</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="p">})</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="batch-path-dynamodb-s3-glue-redshift">Batch Path: DynamoDB → S3 → Glue → Redshift<a class="headerlink" href="#batch-path-dynamodb-s3-glue-redshift" title="Permanent link">&para;</a></h2>
+<h3 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>graph TD
+    subgraph "Change Data Capture"
+        DDB[(DynamoDB)] --&gt; Streams[DDB Streams]
+        Streams --&gt; KDF[Kinesis Data Firehose]
+    end
+
+    subgraph "Data Lake — S3"
+        KDF --&gt;|Buffered, Parquet| S3Raw["S3: s3://luzia-data-lake/raw/&lt;br/&gt;partitioned by date/hour"]
+        S3Raw --&gt; Glue[AWS Glue ETL Job]
+        Glue --&gt; S3Curated["S3: s3://luzia-data-lake/curated/&lt;br/&gt;partitioned by date"]
+    end
+
+    subgraph "Data Warehouse"
+        S3Curated --&gt; Copy[Redshift COPY]
+        Copy --&gt; RS[(Redshift)]
+    end
+
+    subgraph "Orchestration"
+        SF[Step Functions] -.-&gt;|Triggers hourly| Glue
+        SF -.-&gt;|Triggers after Glue| Copy
+    end</code></pre>
+<h3 id="kinesis-data-firehose-configuration">Kinesis Data Firehose Configuration<a class="headerlink" href="#kinesis-data-firehose-configuration" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Source</strong>: DynamoDB Streams (via Lambda fan-out) or direct Kinesis Data Streams</li>
+<li><strong>Buffer</strong>: 5 minutes or 128 MB (whichever comes first)</li>
+<li><strong>Format conversion</strong>: JSON → Parquet (using Glue Data Catalog schema)</li>
+<li><strong>S3 partitioning</strong>: <code>s3://luzia-data-lake/raw/year=YYYY/month=MM/day=DD/hour=HH/</code></li>
+</ul>
+<h3 id="aws-glue-etl-job">AWS Glue ETL Job<a class="headerlink" href="#aws-glue-etl-job" title="Permanent link">&para;</a></h3>
+<p>The Glue job runs hourly and performs:</p>
+<ol>
+<li><strong>Deduplication</strong> — remove duplicates using <code>idempotency_key</code> with window functions</li>
+<li><strong>Schema enforcement</strong> — validate and cast types against the Glue Data Catalog</li>
+<li><strong>Enrichment</strong> — join with user dimension data (timezone, country, signup date)</li>
+<li><strong>Aggregation</strong> — compute daily summaries per user</li>
+<li><strong>Write</strong> — output to curated S3 in Parquet, partitioned by date</li>
+</ol>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Deduplication using PySpark window functions</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">window</span> <span class="o">=</span> <span class="n">Window</span><span class="o">.</span><span class="n">partitionBy</span><span class="p">(</span><span class="s2">&quot;idempotency_key&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">deduped</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;row_num&quot;</span><span class="p">,</span> <span class="n">row_number</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="n">window</span><span class="p">))</span> \
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>             <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;row_num&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> \
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>             <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;row_num&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="redshift-loading">Redshift Loading<a class="headerlink" href="#redshift-loading" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>COPY command</strong> from S3 curated layer (Parquet format, automatic schema mapping)</li>
+<li><strong>Incremental loads</strong> — only process new partitions since last successful run</li>
+<li><strong>Schema</strong>: see <a href="https://github.com/MarksonMarcolino/gamification-data-pipeline/blob/main/code-samples/sql/redshift_schema.sql">Redshift DDL</a></li>
+</ul>
+<hr />
+<h2 id="timezone-handling-strategy">Timezone Handling Strategy<a class="headerlink" href="#timezone-handling-strategy" title="Permanent link">&para;</a></h2>
+<p>Timezone correctness is critical because streaks depend on "one activity per <strong>calendar day</strong> in the user's local time."</p>
+<h3 id="the-problem">The Problem<a class="headerlink" href="#the-problem" title="Permanent link">&para;</a></h3>
+<p>A user in <code>America/Sao_Paulo</code> (UTC-3) interacts at <code>2025-03-15T23:30:00-03:00</code>. In UTC, that's <code>2025-03-16T02:30:00Z</code>. If we naively use UTC dates, this activity would count toward March 16th instead of March 15th — potentially breaking a streak.</p>
+<h3 id="the-solution">The Solution<a class="headerlink" href="#the-solution" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart LR
+    A["Client sends&lt;br/&gt;client_timestamp +&lt;br/&gt;timezone"] --&gt; B["Lambda converts to&lt;br/&gt;user's local date"]
+    B --&gt; C["Store activity_date as&lt;br/&gt;local date YYYY-MM-DD"]
+    C --&gt; D["All streak comparisons&lt;br/&gt;use local dates"]</code></pre>
+<p><strong>Rules:</strong></p>
+<ol>
+<li><strong>The client always sends</strong> <code>client_timestamp</code> (ISO 8601 with offset) and <code>timezone</code> (IANA)</li>
+<li><strong>The server converts</strong> to the user's local date using the <code>timezone</code> field — never trusts the client's date calculation</li>
+<li><strong><code>activity_date</code></strong> in <code>DailyActivity</code> is always in the user's local timezone</li>
+<li><strong><code>last_activity_date</code></strong> in <code>UserStreaks</code> is also in the user's local timezone</li>
+<li><strong>UTC is the storage format</strong> for all raw timestamps — local dates are derived, not stored as the primary timestamp</li>
+</ol>
+<p><strong>Edge case — user changes timezone:</strong></p>
+<ul>
+<li>If a user travels from <code>America/Sao_Paulo</code> to <code>Europe/London</code>, their timezone in <code>UserStreaks</code> is updated</li>
+<li>The streak comparison uses the <strong>new</strong> timezone going forward</li>
+<li>Historical <code>DailyActivity</code> records retain their original local dates (immutable)</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">zoneinfo</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZoneInfo</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_local_date</span><span class="p">(</span><span class="n">utc_timestamp</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timezone</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert UTC timestamp to local date string.&quot;&quot;&quot;</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">utc_dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">utc_timestamp</span><span class="p">)</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">local_dt</span> <span class="o">=</span> <span class="n">utc_dt</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">ZoneInfo</span><span class="p">(</span><span class="n">timezone</span><span class="p">))</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="k">return</span> <span class="n">local_dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="orchestration-monitoring">Orchestration &amp; Monitoring<a class="headerlink" href="#orchestration-monitoring" title="Permanent link">&para;</a></h2>
+<h3 id="step-functions-workflow">Step Functions Workflow<a class="headerlink" href="#step-functions-workflow" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; CheckNewData
+    CheckNewData --&gt; RunGlueJob: New partitions found
+    CheckNewData --&gt; [*]: No new data
+    RunGlueJob --&gt; WaitForGlue
+    WaitForGlue --&gt; CheckGlueStatus
+    CheckGlueStatus --&gt; LoadRedshift: Success
+    CheckGlueStatus --&gt; AlertOnFailure: Failed
+    LoadRedshift --&gt; RunDataQuality
+    RunDataQuality --&gt; [*]: All checks pass
+    RunDataQuality --&gt; AlertOnFailure: Checks failed
+    AlertOnFailure --&gt; [*]</code></pre>
+<h3 id="monitoring-alerts">Monitoring &amp; Alerts<a class="headerlink" href="#monitoring-alerts" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Threshold</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lambda error rate</td>
+<td>&gt; 1%</td>
+<td>PagerDuty alert</td>
+</tr>
+<tr>
+<td>Glue job duration</td>
+<td>&gt; 2x baseline</td>
+<td>CloudWatch alarm</td>
+</tr>
+<tr>
+<td>DDB throttled requests</td>
+<td>&gt; 0</td>
+<td>Auto-scale or alarm</td>
+</tr>
+<tr>
+<td>Streak update lag</td>
+<td>&gt; 5 seconds</td>
+<td>Investigate Streams</td>
+</tr>
+<tr>
+<td>S3 partition gap</td>
+<td>Missing hourly partition</td>
+<td>Firehose health check</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition info">
+<p class="admonition-title">Code Samples</p>
+<ul>
+<li><a href="https://github.com/MarksonMarcolino/gamification-data-pipeline/blob/main/code-samples/lambda/event_ingestion.py"><code>code-samples/lambda/event_ingestion.py</code></a> — Ingestion Lambda</li>
+<li><a href="https://github.com/MarksonMarcolino/gamification-data-pipeline/blob/main/code-samples/lambda/streak_processor.py"><code>code-samples/lambda/streak_processor.py</code></a> — Streak processor Lambda</li>
+<li><a href="https://github.com/MarksonMarcolino/gamification-data-pipeline/blob/main/code-samples/glue/etl_job.py"><code>code-samples/glue/etl_job.py</code></a> — Glue PySpark ETL job</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
