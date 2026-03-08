@@ -94,6 +94,7 @@ The **hot table** — queried on every app open to display the user's streak and
 | `total_bestie_points` | Number | | Lifetime BP balance |
 | `streak_updated_at` | String | | ISO 8601 timestamp |
 | `version` | Number | | Optimistic locking counter |
+| `recent_tz_changes` | List | | Tracks timezone changes for abuse detection |
 
 **GSI: `StreakLeaderboard`**
 
@@ -170,7 +171,7 @@ graph LR
 ### DynamoDB Performance Tuning
 
 1. **On-demand capacity mode** — no need to predict traffic; handles spikes automatically during push notifications or marketing campaigns
-2. **DAX (DynamoDB Accelerator)** — alternative to Redis for microsecond reads; used if we want to avoid managing a Redis cluster. Trade-off: DAX only accelerates DynamoDB reads, while Redis can cache computed aggregates
+2. **ElastiCache Redis** — caches streak data, rate-limit counters, and computed aggregates. Chosen over DAX because the system needs more than DynamoDB read acceleration — Redis supports rate limiting (`INCR`/`EXPIRE`), processed-event sets (`SADD`/`SISMEMBER`), and arbitrary cached computations that DAX cannot provide
 3. **Partition key design** — `user_id` provides natural distribution across partitions (assuming UUIDs). No hot partition risk since each user's data is independent
 4. **Item size optimization** — keep items small (<1 KB) for maximum throughput per partition
 
@@ -195,7 +196,7 @@ graph TB
         APIGW[API Gateway]
         LambdaIngest[Lambda:<br/>Event Ingestion]
         DDB[(DynamoDB)]
-        DAX[DAX / ElastiCache]
+        Redis[ElastiCache Redis]
         Streams[DynamoDB Streams]
         LambdaProcess[Lambda:<br/>Streak Processor]
     end
@@ -211,11 +212,11 @@ graph TB
     App --> APIGW
     APIGW --> LambdaIngest
     LambdaIngest --> DDB
-    LambdaIngest --> DAX
+    LambdaIngest --> Redis
     DDB --> Streams
     Streams --> LambdaProcess
     LambdaProcess --> DDB
-    LambdaProcess --> DAX
+    LambdaProcess --> Redis
 
     Streams --> Firehose
     Firehose --> S3Raw

@@ -130,6 +130,10 @@ def create_daily_activity_table(dynamodb) -> None:
                 {"AttributeName": "activity_date", "AttributeType": "S"},
             ],
             BillingMode="PAY_PER_REQUEST",
+            StreamSpecification={
+                "StreamEnabled": True,
+                "StreamViewType": "NEW_IMAGE",
+            },
         )
         table.wait_until_exists()
         print(f"Created table: {table_name}")

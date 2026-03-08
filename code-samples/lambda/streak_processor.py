@@ -138,8 +138,17 @@ def initialize_user(user_id: str, activity_date: str) -> None:
 
 
 def get_previous_date(date_str: str, timezone: str) -> str:
-    """Return the calendar date before the given date in the user's timezone."""
-    local_date = datetime.strptime(date_str, "%Y-%m-%d")
+    """Return the calendar date before the given date in the user's timezone.
+
+    Uses timezone-aware arithmetic so DST transitions are handled correctly.
+    A naive timedelta(days=1) can produce wrong results when clocks spring
+    forward or fall back.
+    """
+    tz = ZoneInfo(timezone)
+    # Anchor at noon to avoid DST edge cases at midnight boundaries
+    local_date = datetime.strptime(date_str, "%Y-%m-%d").replace(
+        hour=12, tzinfo=tz
+    )
     previous = local_date - timedelta(days=1)
     return previous.strftime("%Y-%m-%d")
 

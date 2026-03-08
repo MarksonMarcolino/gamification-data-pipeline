@@ -18,12 +18,19 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 import boto3
+import redis
 from botocore.exceptions import ClientError
 
 dynamodb = boto3.resource("dynamodb")
 bp_events_table = dynamodb.Table(os.environ.get("BP_EVENTS_TABLE", "BPEvents"))
 daily_activity_table = dynamodb.Table(os.environ.get("DAILY_ACTIVITY_TABLE", "DailyActivity"))
 user_streaks_table = dynamodb.Table(os.environ.get("USER_STREAKS_TABLE", "UserStreaks"))
+
+redis_client = redis.Redis(
+    host=os.environ.get("REDIS_HOST", "localhost"),
+    port=int(os.environ.get("REDIS_PORT", "6379")),
+    decode_responses=True,
+)
 
 # Points awarded per event type
 POINTS_MAP = {
@@ -47,6 +54,10 @@ def handler(event, context):
         return response(400, {"error": str(e)})
     except DuplicateEventError:
         return response(200, {"message": "Event already processed", "duplicate": True})
+    except RateLimitError:
+        return response(429, {"error": "Rate limit exceeded"})
+    except TimezoneAbuseError:
+        return response(403, {"error": "Suspicious timezone change detected"})
     except Exception as e:
         print(f"Unexpected error: {e}")
         return response(500, {"error": "Internal server error"})
@@ -57,6 +68,14 @@ class ValidationError(Exception):
 
 
 class DuplicateEventError(Exception):
+    pass
+
+
+class RateLimitError(Exception):
+    pass
+
+
+class TimezoneAbuseError(Exception):
     pass
 
 
@@ -107,7 +126,28 @@ def process_event(event: dict) -> dict:
     points = POINTS_MAP[event_type]
     event_id = f"{utc_ts.strftime('%Y%m%dT%H%M%S')}#{uuid4().hex[:8]}"
 
-    # Write to BPEvents (with dedup via conditional write)
+    # Anomaly detection: rate limiting and timezone abuse
+    if not check_rate_limit(user_id, redis_client):
+        raise RateLimitError()
+    if detect_timezone_abuse(user_id, timezone, user_streaks_table):
+        raise TimezoneAbuseError()
+
+    # Layer 2: Query IdempotencyIndex GSI before writing.
+    # The conditional write (Layer 3) alone doesn't deduplicate because event_id
+    # contains a UUID, so the PK+SK combination is always unique and the
+    # attribute_not_exists condition always passes on a new item.
+    gsi_response = bp_events_table.query(
+        IndexName="IdempotencyIndex",
+        KeyConditionExpression="idempotency_key = :ik",
+        ExpressionAttributeValues={":ik": idempotency_key},
+        Limit=1,
+    )
+    if gsi_response.get("Items"):
+        raise DuplicateEventError()
+
+    # Layer 3: Conditional write as a final guard against the GSI's eventual
+    # consistency window — two concurrent Lambdas could both pass the GSI check,
+    # but only one will win the conditional put.
     try:
         bp_events_table.put_item(
             Item={
@@ -127,6 +167,13 @@ def process_event(event: dict) -> dict:
         if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
             raise DuplicateEventError()
         raise
+
+    # NOTE: The 3 writes below (BPEvents → DailyActivity → UserStreaks) are NOT
+    # atomic. If a later write fails, earlier ones are not rolled back. This is an
+    # accepted trade-off: the nightly reconciliation job (Glue) detects and repairs
+    # any inconsistencies (e.g., points logged in BPEvents but not reflected in
+    # total_bestie_points). DynamoDB doesn't support cross-table transactions
+    # efficiently at this scale, and the eventual consistency window is short.
 
     # Upsert DailyActivity — only the first event of the day creates the record
     try:
@@ -149,12 +196,14 @@ def process_event(event: dict) -> dict:
         raise
 
     # Atomically increment Bestie Points and update timezone
+    # Note: "timezone" is a DynamoDB reserved keyword — must use ExpressionAttributeNames
     user_streaks_table.update_item(
         Key={"user_id": user_id},
         UpdateExpression=(
             "ADD total_bestie_points :pts "
-            "SET timezone = :tz, streak_updated_at = :now"
+            "SET #tz = :tz, streak_updated_at = :now"
         ),
+        ExpressionAttributeNames={"#tz": "timezone"},
         ExpressionAttributeValues={
             ":pts": points,
             ":tz": timezone,
@@ -168,6 +217,46 @@ def process_event(event: dict) -> dict:
         "points_awarded": points,
         "activity_date": local_date,
     }
+
+
+def check_rate_limit(user_id: str, redis_conn) -> bool:
+    """Token bucket rate limiter using Redis. Returns False if rate-limited."""
+    key = f"rate:{user_id}"
+    current = redis_conn.get(key)
+
+    if current and int(current) >= 100:
+        return False  # Rate limited
+
+    pipe = redis_conn.pipeline()
+    pipe.incr(key)
+    pipe.expire(key, 3600)  # Reset every hour
+    pipe.execute()
+    return True
+
+
+def detect_timezone_abuse(user_id: str, new_tz: str, streaks_table) -> bool:
+    """Detect if a user is changing timezones to game the streak system.
+
+    Returns True if suspicious (>2 timezone changes in 24h).
+    """
+    response = streaks_table.get_item(Key={"user_id": user_id})
+    user = response.get("Item", {})
+    old_tz = user.get("timezone", new_tz)
+
+    if old_tz == new_tz:
+        return False
+
+    # Check how many TZ changes in last 24h (stored as a list)
+    tz_changes = user.get("recent_tz_changes", [])
+    recent = [
+        c for c in tz_changes
+        if datetime.fromisoformat(c["timestamp"]) > datetime.now(UTC) - timedelta(hours=24)
+    ]
+
+    if len(recent) >= 2:
+        return True  # Suspicious — flag for review
+
+    return False
 
 
 def response(status_code: int, body: dict) -> dict:

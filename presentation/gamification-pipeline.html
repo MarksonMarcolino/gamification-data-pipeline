@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gamification Data Pipeline: Streaks &amp; Bestie Points</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+<style>
+:root {
+  --bg: #1a1a2e;
+  --accent: #e94560;
+  --blue: #4ea8de;
+  --green: #0f9b58;
+  --text: #c9c9c9;
+  --code-bg: #16213e;
+}
+.reveal { background: var(--bg); color: var(--text); }
+.reveal h1, .reveal h2, .reveal h3, .reveal h4 { color: var(--accent); font-weight: 700; text-transform: none; }
+.reveal h1 { font-size: 2.2em; }
+.reveal h2 { font-size: 1.5em; }
+.reveal h3 { font-size: 1.15em; color: var(--blue); }
+.reveal a { color: var(--blue); }
+.reveal pre { background: var(--code-bg); border-left: 4px solid var(--accent); border-radius: 6px; box-shadow: none; font-size: 0.55em; }
+.reveal pre code { background: transparent; padding: 12px 16px; }
+.reveal code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+.reveal table { margin: 0 auto; border-collapse: collapse; font-size: 0.65em; }
+.reveal table th { color: var(--accent); border-bottom: 2px solid #555; padding: 6px 12px; text-align: left; }
+.reveal table td { border-bottom: 1px solid #333; padding: 6px 12px; }
+.reveal table tr:last-child td { border-bottom: none; }
+.reveal .slides section { padding: 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; }
+.small-table table { font-size: 0.55em; }
+.code-small pre { font-size: 0.5em; }
+.subtitle { color: var(--blue); font-size: 0.7em; margin-top: 0.3em; }
+.author { color: #888; font-size: 0.6em; margin-top: 1em; }
+.badge { padding: 2px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 700; color: #fff; }
+.badge-critical { background: #e94560; }
+.badge-high { background: #e07020; }
+.badge-medium { background: #c8a000; color: #111; }
+.badge-low { background: #666; }
+.badge-design { background: var(--blue); }
+.legend { font-size: 0.5em; display: flex; gap: 16px; justify-content: center; margin-top: 8px; }
+.legend span { display: flex; align-items: center; gap: 4px; }
+.legend .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.legend .dot-green { background: var(--green); }
+.legend .dot-blue { background: var(--blue); }
+.legend .dot-red { background: var(--accent); }
+.diagram-container { width: 100%; display: flex; justify-content: center; }
+.diagram-container svg { max-width: 100%; }
+ol.steps { text-align: left; font-size: 0.7em; }
+ol.steps li { margin: 0.4em 0; }
+ul.compact { text-align: left; font-size: 0.65em; list-style: none; padding-left: 0; }
+ul.compact li::before { content: "→ "; color: var(--accent); }
+.highlight-green { color: var(--green); font-weight: 700; }
+.highlight-blue { color: var(--blue); font-weight: 700; }
+.highlight-red { color: var(--accent); font-weight: 700; }
+section .r-stretch { margin: 0; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================ -->
+<!-- SLIDE 1: Title -->
+<!-- ============================================================ -->
+<section>
+  <h1>Gamification Data Pipeline</h1>
+  <h2 style="color: var(--blue); font-size: 1em;">Streaks &amp; Bestie Points</h2>
+  <p class="subtitle">Real-time + batch processing at scale &mdash; millions of DAU</p>
+  <p class="author">Markson Rebelo Marcolino</p>
+  <aside class="notes">
+    Welcome everyone. Today I'm presenting a gamification data pipeline I designed for a system like Luzia — handling user engagement streaks and point rewards at massive scale. We'll walk through the architecture, dive into key engineering decisions, and finish with a live POC demo.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 2: Problem Statement & Requirements -->
+<!-- ============================================================ -->
+<section>
+  <h2>Problem Statement &amp; Requirements</h2>
+  <div class="two-col">
+    <div>
+      <h3>User Features</h3>
+      <ul class="compact">
+        <li><strong>Daily streaks</strong> &mdash; consecutive-day tracking</li>
+        <li><strong>Bestie Points (BP)</strong> &mdash; reward interactions</li>
+        <li><strong>Leaderboards</strong> &mdash; top streaks by region</li>
+        <li><strong>Analytics</strong> &mdash; engagement trends, cohort analysis</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Engineering Constraints</h3>
+      <ul class="compact">
+        <li class="fragment"><strong>Scale:</strong> millions of DAU, spiky traffic</li>
+        <li class="fragment"><strong>Latency:</strong> sub-10ms reads for streak display</li>
+        <li class="fragment"><strong>Global TZ:</strong> streaks depend on user's <em>local</em> calendar day</li>
+        <li class="fragment"><strong>Correctness:</strong> no lost/inflated streaks</li>
+        <li class="fragment"><strong>Cost:</strong> pay-per-use &mdash; no idle provisioning</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    Two sides to this coin: on the left, what users see — streaks, points, leaderboards. On the right, the hard engineering constraints. Timezone handling is surprisingly critical — a user at 23:30 in São Paulo is on a different calendar day than UTC would suggest. We need correctness without sacrificing performance.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 3: Architecture Overview -->
+<!-- ============================================================ -->
+<section>
+  <h2>Architecture Overview</h2>
+  <div id="arch-diagram" class="diagram-container"></div>
+  <div class="legend">
+    <span><span class="dot dot-green"></span> Real-time path</span>
+    <span><span class="dot dot-blue"></span> Batch / analytics path</span>
+  </div>
+  <aside class="notes">
+    This is the full system. Green path is real-time: mobile app → API Gateway → Lambda ingestion. The ingestion Lambda checks Redis for rate limiting, then writes to DynamoDB (three tables: BPEvents, DailyActivity, UserStreaks). DynamoDB Streams picks up the DailyActivity change and triggers a second Lambda — the streak processor — which calculates the streak and does two things: updates UserStreaks in DynamoDB with the new streak count, and does a write-through to Redis so the next app open is sub-10ms. Blue path is batch: Streams fan out to Kinesis Firehose → S3 raw → Glue ETL → S3 curated → Redshift for analytics. Two completely independent paths, same source of truth.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 4: Data Model -->
+<!-- ============================================================ -->
+<section>
+  <h2>Data Model</h2>
+  <div class="two-col small-table">
+    <div>
+      <div id="er-diagram" class="diagram-container"></div>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>Table</th><th>PK</th><th>SK</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><strong>UserStreaks</strong></td><td>user_id</td><td>&mdash;</td><td>Streak &amp; BP state</td></tr>
+          <tr><td><strong>BPEvents</strong></td><td>user_id</td><td>event_id</td><td>Event log</td></tr>
+          <tr><td><strong>DailyActivity</strong></td><td>user_id</td><td>activity_date</td><td>1 row/user/day</td></tr>
+        </tbody>
+      </table>
+      <div class="fragment" style="margin-top: 16px;">
+        <h3>Global Secondary Indexes</h3>
+        <table>
+          <thead><tr><th>GSI</th><th>On</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>StreakLeaderboard</td><td>UserStreaks</td><td>Top streaks by region</td></tr>
+            <tr><td>IdempotencyIndex</td><td>BPEvents</td><td>O(1) dedup</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    Three DynamoDB tables. UserStreaks is the hot table — queried on every app open. BPEvents is append-only, stores every point-earning interaction. DailyActivity is the source of truth for streak calculation — one record per user per day. Two GSIs: one for leaderboards, one for deduplication. All keyed on user_id for even partition distribution.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 5: Event Ingestion -->
+<!-- ============================================================ -->
+<section>
+  <h2>Event Ingestion &mdash; 5 Steps</h2>
+  <div class="two-col">
+    <div>
+      <ol class="steps">
+        <li class="fragment"><strong>Validate</strong> &mdash; schema, required fields, timestamp sanity</li>
+        <li class="fragment"><strong>Deduplicate</strong> &mdash; check <code>IdempotencyIndex</code> GSI</li>
+        <li class="fragment"><strong>Normalize</strong> &mdash; UTC conversion + user's local date</li>
+        <li class="fragment"><strong>Write</strong> &mdash; conditional <code>PutItem</code> to BPEvents</li>
+        <li class="fragment"><strong>Award</strong> &mdash; atomic increment on <code>total_bestie_points</code></li>
+      </ol>
+    </div>
+    <div class="code-small">
+      <pre><code class="language-json">{
+  "user_id": "usr_abc123",
+  "event_type": "CONVERSATION_START",
+  "client_timestamp": "2025-03-15T14:30:00-03:00",
+  "timezone": "America/Sao_Paulo",
+  "idempotency_key": "usr_abc123:CONV:2025-03-15T14:30",
+  "source": "mobile_app",
+  "metadata": {
+    "app_version": "4.2.1",
+    "device_os": "iOS 18.1"
+  }
+}</code></pre>
+    </div>
+  </div>
+  <aside class="notes">
+    Five steps on every incoming event. The key insight is the 3 writes are NOT atomic — BPEvents, DailyActivity, UserStreaks are separate tables. We chose to accept this trade-off rather than pay the latency/cost of TransactWriteItems. The nightly reconciliation job catches any drift.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 6: Deduplication -->
+<!-- ============================================================ -->
+<section>
+  <h2>Deduplication &mdash; 3-Layer Defense</h2>
+  <div id="dedup-diagram" class="diagram-container"></div>
+  <div class="small-table" style="margin-top: 12px;">
+    <table>
+      <thead><tr><th>Layer</th><th>Mechanism</th><th>Catches</th><th>Consistency</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Client idempotency key</td><td>Missing key → reject 400</td><td>N/A</td></tr>
+        <tr><td>2</td><td>GSI lookup on BPEvents</td><td>Known duplicates (eventual)</td><td>Eventually consistent</td></tr>
+        <tr><td>3</td><td>Conditional <code>PutItem</code></td><td>Race-condition duplicates</td><td>Strongly consistent</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <aside class="notes">
+    Three layers because no single layer catches everything. Layer 1 is just key presence — rejects malformed requests. Layer 2 queries the GSI but it's eventually consistent, so two Lambda invocations could both pass the check. Layer 3 is the safety net — conditional PutItem with attribute_not_exists is strongly consistent. Bug fix #1 was adding Layer 2 — the original code relied only on Layer 3, which doesn't return the cached response for known duplicates.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 7: Timezone Handling -->
+<!-- ============================================================ -->
+<section>
+  <h2>Timezone Handling</h2>
+  <div class="fragment">
+    <h3>The Problem</h3>
+    <div id="tz-diagram" class="diagram-container" style="margin: 8px 0;"></div>
+    <p style="font-size: 0.6em;">User in São Paulo at <strong>23:30 local</strong> → UTC says March 16, but it's still March 15 for them.</p>
+  </div>
+  <div class="fragment code-small" style="margin-top: 12px;">
+    <h3>The Solution: Noon Anchor</h3>
+    <pre><code class="language-python">def get_previous_date(date_str: str, timezone: str) -> str:
+    """Return the calendar date before the given date
+    in the user's timezone. Noon anchor avoids DST edge
+    cases at midnight boundaries."""
+    tz = ZoneInfo(timezone)
+    local_date = datetime.strptime(date_str, "%Y-%m-%d") \
+        .replace(hour=12, tzinfo=tz)
+    previous = local_date - timedelta(days=1)
+    return previous.strftime("%Y-%m-%d")</code></pre>
+  </div>
+  <aside class="notes">
+    This slide shows why timezone handling is a first-class concern. A naive UTC comparison would break streaks for anyone not on GMT. The noon anchor technique is key — by anchoring at noon instead of midnight, we avoid DST transition issues where subtracting 24 hours from midnight might land on the same calendar day. Bug fix #3 was making get_previous_date actually use the timezone parameter.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 8: Streak Processor -->
+<!-- ============================================================ -->
+<section>
+  <h2>Streak Processor</h2>
+  <div id="streak-diagram" class="diagram-container"></div>
+  <ul class="compact" style="margin-top: 10px; font-size: 0.55em;">
+    <li><span class="highlight-green">Optimistic locking:</span> <code>version</code> attribute prevents concurrent overwrites</li>
+    <li><span class="highlight-blue">Idempotent:</span> re-processing same event produces same result</li>
+    <li><span class="highlight-red">Cache invalidation:</span> write-through to Redis after every update</li>
+  </ul>
+  <aside class="notes">
+    The streak processor Lambda is triggered by DynamoDB Streams. It reads the user's current streak, compares dates in the user's local timezone, and either increments, resets, or skips. Conditional writes with version numbers prevent race conditions — if two Lambdas process events for the same user simultaneously, one will fail and retry with fresh state. The entire flow is idempotent.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 9: Cache Strategy -->
+<!-- ============================================================ -->
+<section>
+  <h2>Cache Strategy</h2>
+  <div id="cache-diagram" class="diagram-container"></div>
+  <div class="two-col small-table" style="margin-top: 12px;">
+    <div>
+      <table style="font-size: 0.45em;">
+        <thead><tr><th>Cache Key</th><th>TTL</th><th>Invalidation</th></tr></thead>
+        <tbody>
+          <tr class="fragment"><td><code>streak:{user_id}</code></td><td>5 min</td><td>Write-through</td></tr>
+          <tr class="fragment"><td><code>active:{user_id}:{date}</code></td><td>24h</td><td>Immutable</td></tr>
+          <tr class="fragment"><td><code>leaderboard:{region}</code></td><td>1 min</td><td>Scheduled</td></tr>
+          <tr class="fragment"><td><code>rate:{user_id}</code></td><td>1h</td><td>Auto-expire</td></tr>
+          <tr class="fragment"><td><code>processed:{user_id}</code></td><td>1h</td><td>Auto-expire</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>Why Write-Through?</h3>
+      <ul class="compact" style="font-size: 0.55em;">
+        <li>Streak data must be <strong>immediately consistent</strong></li>
+        <li>User updates streak → sees new count instantly</li>
+        <li>Write-behind would introduce staleness window</li>
+        <li>Cache failure is non-fatal — DynamoDB is source of truth</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    ElastiCache Redis sits between Lambda and DynamoDB. Write-through means every DynamoDB update also writes to Redis. This gives us immediate consistency for the user — they see their new streak right away. Five types of keys with different TTLs based on their update patterns. Rate limiting and processed-event keys enable dedup and abuse detection at the stream processing layer.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10: Batch ETL & Analytics -->
+<!-- ============================================================ -->
+<section>
+  <h2>Batch ETL Pipeline</h2>
+  <div id="batch-diagram" class="diagram-container"></div>
+  <h3 style="margin-top: 20px;">Glue ETL Steps</h3>
+  <ol class="steps" style="font-size: 0.65em;">
+    <li class="fragment">Dedup by <code>idempotency_key</code> (PySpark window functions)</li>
+    <li class="fragment">Schema enforcement &amp; type casting</li>
+    <li class="fragment">Enrich with user dimension data (country, segment)</li>
+    <li class="fragment">Compute daily aggregates per user</li>
+    <li class="fragment">Write to curated S3 (Parquet, partitioned by date)</li>
+    <li class="fragment">COPY into Redshift</li>
+  </ol>
+  <aside class="notes">
+    The batch path runs hourly via Step Functions. DynamoDB Streams fan out to Kinesis Firehose, which buffers to S3 in Parquet format, partitioned by date/hour. Glue ETL deduplicates using PySpark window functions — partition by idempotency_key, order by created_at, keep row_number == 1. Same dedup approach as the real-time path but in batch. In the POC, we simulate this with pandas DataFrames.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 10b: Redshift Warehouse -->
+<!-- ============================================================ -->
+<section>
+  <h2>Analytical Warehouse (Redshift)</h2>
+  <div class="two-col small-table">
+    <div>
+      <h3>Star Schema</h3>
+      <table>
+        <thead><tr><th>Table</th><th>Type</th><th>Keys</th></tr></thead>
+        <tbody>
+          <tr><td><code>fact_bp_events</code></td><td>Fact</td><td>DIST(user_id), SORT(event_date)</td></tr>
+          <tr><td><code>fact_daily_summaries</code></td><td>Fact</td><td>PK(user_id, event_date)</td></tr>
+          <tr><td><code>dim_user_streaks</code></td><td>Dim</td><td>PK(user_id, snapshot_date)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>Analytical Views</h3>
+      <table>
+        <thead><tr><th>View</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>v_weekly_streak_stats</code></td><td>Users, avg pts by week</td></tr>
+          <tr><td><code>v_streak_distribution</code></td><td>Users by streak bucket</td></tr>
+          <tr><td><code>v_event_type_perf</code></td><td>Events &amp; pts by type</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="fragment" style="margin-top: 12px;">
+    <h3>Incremental Load Pattern</h3>
+    <ul class="compact" style="font-size: 0.5em;">
+      <li>COPY new batch into <code>stg_bp_events</code> (staging table)</li>
+      <li>DELETE matching rows from fact, INSERT from staging, TRUNCATE staging</li>
+      <li>Upsert behavior &mdash; idempotent, safe to re-run</li>
+    </ul>
+  </div>
+  <aside class="notes">
+    Redshift uses a star schema. DISTKEY on user_id co-locates all of a user's events on the same node for fast joins. SORTKEY on event_date enables zone-map pruning for date-range queries. The staging plus merge pattern simulates Redshift COPY — bulk load into staging, delete-insert into fact, truncate staging. This is idempotent and safe to re-run. In the POC, we simulate this with SQLite in-memory.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 11: Data Integrity -->
+<!-- ============================================================ -->
+<section>
+  <h2>Data Integrity</h2>
+  <div class="two-col">
+    <div>
+      <h3>Anomaly Detection Rules</h3>
+      <table style="font-size: 0.45em;">
+        <thead><tr><th>Rule</th><th>Condition</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr class="fragment"><td>Rate limit</td><td>&gt;100 evt/user/hr</td><td>Throttle</td></tr>
+          <tr class="fragment"><td>Bad timestamp</td><td>&gt;24h future / &gt;7d past</td><td>Reject</td></tr>
+          <tr class="fragment"><td>TZ changes</td><td>&gt;2x in 24h</td><td>Flag</td></tr>
+          <tr class="fragment"><td>Streak jump</td><td>&gt;1 per update</td><td>Block</td></tr>
+          <tr class="fragment"><td>Midnight exploit</td><td>23:59→00:01 TZ swap</td><td>Server TZ</td></tr>
+          <tr class="fragment"><td>BP spike</td><td>&gt;10x avg in 1h</td><td>Review</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>Nightly Reconciliation</h3>
+      <div id="reconciliation-diagram" class="diagram-container"></div>
+    </div>
+  </div>
+  <aside class="notes">
+    Streaks are a trust contract. Lost streaks destroy engagement, inflated streaks destroy meaning. Six anomaly detection rules cover rate abuse, timestamp manipulation, timezone gaming, and statistical outliers. The nightly reconciliation job compares DynamoDB state against DailyActivity records and BPEvents sums — auto-fixes minor drift, alerts on-call for large discrepancies.
+  </aside>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLIDE 12: Engineering Trade-offs -->
+<!-- ============================================================ -->
+<section>
+  <h2>Engineering Trade-offs</h2>
+  <div class="small-table">
+    <table>
+      <thead><tr><th>Decision</th><th>Chose</th><th>Over</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr class="fragment"><td>Database</td><td>DynamoDB</td><td>Aurora</td><td>HTTP-based (no conn pool), auto-scale, conditional writes, Streams for CDC</td></tr>
+        <tr class="fragment"><td>Cache</td><td>Write-through Redis</td><td>DAX / write-behind</td><td>Immediate consistency; Redis supports computed aggregates + rate limiting</td></tr>
+        <tr class="fragment"><td>Atomicity</td><td>Eventual (3 writes)</td><td>TransactWriteItems</td><td>Avoid 4x latency/cost; nightly reconciliation catches drift</td></tr>
+        <tr class="fragment"><td>Consistency</td><td>Optimistic locking</td><td>Pessimistic locks</td><td>Low contention (1 user = 1 partition); conditional writes + retry</td></tr>
+        <tr class="fragment"><td>Dedup</td><td>3-layer defense</td><td>Single layer</td><td>Each layer catches different failure modes (eventual vs strong)</td></tr>
+        <tr class="fragment"><td>Timezone</td><td>Server-side conversion</td><td>Trust client date</td><td>Prevents gaming; noon anchor handles DST safely</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <aside class="notes">
+    Six key decisions and their trade-offs. The most interesting is the atomicity trade-off — DynamoDB doesn't support efficient cross-table transactions at scale. Rather than pay 4x the cost and latency of TransactWriteItems, we accept eventual consistency and let the nightly reconciliation job fix any drift. In practice, drift is extremely rare and always small.
+  </aside>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- SLIDE 14: POC Demo -->
+<!-- ============================================================ -->
+<section>
+  <h2>POC Demo</h2>
+  <div class="two-col small-table">
+    <div>
+      <h3>Mock Mapping</h3>
+      <table>
+        <thead><tr><th>AWS</th><th>Mock</th></tr></thead>
+        <tbody>
+          <tr><td>DynamoDB</td><td>moto</td></tr>
+          <tr><td>Lambda</td><td>Direct calls</td></tr>
+          <tr><td>Redis</td><td>fakeredis</td></tr>
+          <tr><td>S3 + Glue</td><td>pandas</td></tr>
+          <tr><td>Redshift</td><td>SQLite</td></tr>
+          <tr><td>Streams</td><td>Manual trigger</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>6 Test Users</h3>
+      <table>
+        <thead><tr><th>User</th><th>Scenario</th></tr></thead>
+        <tbody>
+          <tr><td>Alice</td><td>Streak gap &amp; restart</td></tr>
+          <tr><td>Bob</td><td>Near-midnight boundary</td></tr>
+          <tr><td>Carol</td><td>DST transition</td></tr>
+          <tr><td>Dave</td><td>Dedup (15 sent → 3)</td></tr>
+          <tr><td>Eve</td><td>UTC+13 offset</td></tr>
+          <tr><td>Frank</td><td>Rate-limit + bad types</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="fragment" style="margin-top: 16px;">
+    <h3>Run It</h3>
+    <pre style="font-size: 0.45em;"><code class="language-bash">cd notebook/ && pip install -r requirements.txt
+jupyter notebook gamification_pipeline_poc.ipynb  # Kernel → Restart & Run All</code></pre>
+  </div>
+  <aside class="notes">
+    Now let's switch to the live notebook demo. The POC simulates the entire architecture locally — moto for DynamoDB, fakeredis for Redis, pandas for Glue ETL, and SQLite for Redshift. Six test users cover the critical scenarios: timezone handling, deduplication, rate limiting, and edge cases. All assertions are built into the notebook — Restart & Run All should complete with zero errors. Let me switch to Jupyter now.
+  </aside>
+</section>
+
+</div><!-- .slides -->
+</div><!-- .reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+// ── D3 Diagram Utilities ─────────────────────────────────────────────────
+const C = {
+  bg: '#1a1a2e', accent: '#e94560', blue: '#4ea8de', green: '#0f9b58',
+  text: '#c9c9c9', codeBg: '#16213e', nodeFill: '#16213e'
+};
+
+function createSVG(container, w, h) {
+  const el = document.querySelector(container);
+  if (!el) return null;
+  el.innerHTML = '';
+  return d3.select(container).append('svg')
+    .attr('viewBox', `0 0 ${w} ${h}`)
+    .attr('width', '100%')
+    .style('max-height', h + 'px');
+}
+
+function drawArrowMarker(svg, id, color) {
+  svg.append('defs').append('marker')
+    .attr('id', id).attr('viewBox', '0 0 10 10')
+    .attr('refX', 9).attr('refY', 5)
+    .attr('markerWidth', 6).attr('markerHeight', 6)
+    .attr('orient', 'auto-start-reverse')
+    .append('path').attr('d', 'M 0 0 L 10 5 L 0 10 z').attr('fill', color);
+}
+
+function animateNodes(sel, delay) {
+  sel.attr('opacity', 0)
+    .transition().duration(300).delay((d, i) => (delay || 0) + i * 50)
+    .attr('opacity', 1);
+}
+
+function animatePath(sel, delay) {
+  sel.each(function() {
+    const len = this.getTotalLength ? this.getTotalLength() : 200;
+    d3.select(this)
+      .attr('stroke-dasharray', len)
+      .attr('stroke-dashoffset', len)
+      .transition().duration(600).delay(delay || 300)
+      .attr('stroke-dashoffset', 0);
+  });
+}
+
+function drawRoundedRect(g, x, y, w, h, label, stroke, opts) {
+  opts = opts || {};
+  const r = g.append('g').attr('transform', `translate(${x},${y})`);
+  r.append('rect').attr('width', w).attr('height', h).attr('rx', 8)
+    .attr('fill', opts.fill || C.nodeFill).attr('stroke', stroke || C.blue).attr('stroke-width', 2);
+  const lines = label.split('\n');
+  lines.forEach((line, i) => {
+    r.append('text').attr('x', w/2).attr('y', h/2 + (i - (lines.length-1)/2) * 14)
+      .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+      .attr('fill', opts.textColor || C.text).attr('font-size', opts.fontSize || 11)
+      .attr('font-family', 'sans-serif').text(line);
+  });
+  return r;
+}
+
+function drawCylinder(g, x, y, w, h, label, stroke) {
+  const ry = 6;
+  const r = g.append('g').attr('transform', `translate(${x},${y})`);
+  r.append('path')
+    .attr('d', `M0,${ry} L0,${h-ry} Q0,${h} ${w/2},${h} Q${w},${h} ${w},${h-ry} L${w},${ry} Q${w},0 ${w/2},0 Q0,0 0,${ry} Z`)
+    .attr('fill', C.nodeFill).attr('stroke', stroke || C.accent).attr('stroke-width', 2);
+  r.append('ellipse').attr('cx', w/2).attr('cy', ry).attr('rx', w/2).attr('ry', ry)
+    .attr('fill', C.nodeFill).attr('stroke', stroke || C.accent).attr('stroke-width', 2);
+  const lines = label.split('\n');
+  lines.forEach((line, i) => {
+    r.append('text').attr('x', w/2).attr('y', h/2 + 4 + (i - (lines.length-1)/2) * 13)
+      .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+      .attr('fill', C.text).attr('font-size', 10).attr('font-family', 'sans-serif').text(line);
+  });
+  return r;
+}
+
+function drawDiamond(g, x, y, w, h, label, stroke) {
+  const r = g.append('g').attr('transform', `translate(${x},${y})`);
+  r.append('polygon')
+    .attr('points', `${w/2},0 ${w},${h/2} ${w/2},${h} 0,${h/2}`)
+    .attr('fill', C.bg).attr('stroke', stroke || C.accent).attr('stroke-width', 2);
+  const lines = label.split('\n');
+  lines.forEach((line, i) => {
+    r.append('text').attr('x', w/2).attr('y', h/2 + (i - (lines.length-1)/2) * 12)
+      .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+      .attr('fill', C.text).attr('font-size', 9).attr('font-family', 'sans-serif').text(line);
+  });
+  return r;
+}
+
+function drawLine(g, x1, y1, x2, y2, color, marker) {
+  return g.append('line')
+    .attr('x1', x1).attr('y1', y1).attr('x2', x2).attr('y2', y2)
+    .attr('stroke', color || C.blue).attr('stroke-width', 2)
+    .attr('marker-end', marker ? `url(#${marker})` : null);
+}
+
+function drawPath(g, points, color, marker) {
+  const line = d3.line().x(d => d[0]).y(d => d[1]).curve(d3.curveBasis);
+  return g.append('path')
+    .attr('d', line(points))
+    .attr('fill', 'none').attr('stroke', color || C.blue).attr('stroke-width', 2)
+    .attr('marker-end', marker ? `url(#${marker})` : null);
+}
+
+function drawLabel(g, x, y, text, color, size) {
+  return g.append('text').attr('x', x).attr('y', y)
+    .attr('text-anchor', 'middle').attr('fill', color || '#888')
+    .attr('font-size', size || 9).attr('font-family', 'sans-serif').text(text);
+}
+
+// ── Diagram Renderers ────────────────────────────────────────────────────
+
+const rendered = {};
+
+function renderArchDiagram() {
+  if (rendered['arch']) return; rendered['arch'] = true;
+  const svg = createSVG('#arch-diagram', 920, 280);
+  if (!svg) return;
+  drawArrowMarker(svg, 'ag', C.green);
+  drawArrowMarker(svg, 'ab', C.blue);
+
+  const nodes = svg.append('g');
+
+  // Real-time path nodes
+  drawRoundedRect(nodes, 10, 110, 80, 36, 'Mobile App', C.text);
+  drawRoundedRect(nodes, 120, 110, 85, 36, 'API Gateway', C.green);
+  drawRoundedRect(nodes, 235, 110, 90, 36, 'Lambda\nIngestion', C.green);
+  drawCylinder(nodes, 360, 100, 80, 45, 'DynamoDB', C.accent);
+  drawRoundedRect(nodes, 480, 45, 80, 36, 'Redis\nCache', C.green);
+  drawRoundedRect(nodes, 480, 160, 90, 36, 'DDB\nStreams', C.green);
+  drawRoundedRect(nodes, 610, 110, 90, 36, 'Lambda\nStreak Proc.', C.green);
+
+  // Batch path nodes
+  drawRoundedRect(nodes, 480, 225, 90, 32, 'Kinesis\nFirehose', C.blue);
+  drawCylinder(nodes, 610, 218, 70, 36, 'S3 Raw', C.blue);
+  drawRoundedRect(nodes, 710, 218, 70, 36, 'Glue\nETL', C.blue);
+  drawCylinder(nodes, 810, 218, 75, 36, 'S3\nCurated', C.blue);
+  drawCylinder(nodes, 810, 100, 75, 45, 'Redshift', C.blue);
+
+  animateNodes(nodes.selectAll('g'), 0);
+
+  // Real-time connections (green)
+  const paths = svg.append('g');
+  // Mobile App → API Gateway → Lambda Ingestion → DynamoDB
+  drawLine(paths, 90, 128, 120, 128, C.green, 'ag');
+  drawLine(paths, 205, 128, 235, 128, C.green, 'ag');
+  drawLine(paths, 325, 128, 360, 123, C.green, 'ag');
+  // Lambda Ingestion → Redis (rate-limit check)
+  drawPath(paths, [[280,110],[280,63],[480,63]], C.green, 'ag');
+  drawLabel(paths, 370, 55, 'rate limit', '#888', 8);
+  // DynamoDB → DDB Streams (CDC)
+  drawLine(paths, 440, 128, 480, 178, C.green, 'ag');
+  // DDB Streams → Lambda Streak Proc
+  drawLine(paths, 570, 178, 610, 138, C.green, 'ag');
+  // Lambda Streak Proc → Redis (write-through cache)
+  drawPath(paths, [[700,125],[730,80],[560,58],[520,63]], C.green, 'ag');
+  drawLabel(paths, 630, 72, 'write-through', '#888', 8);
+  // Lambda Streak Proc → DynamoDB (update streaks)
+  drawPath(paths, [[700,135],[730,150],[450,133],[440,126]], C.green, 'ag');
+
+  // Batch connections (blue)
+  drawLine(paths, 525, 196, 525, 225, C.blue, 'ab');
+  drawLine(paths, 570, 241, 610, 236, C.blue, 'ab');
+  drawLine(paths, 680, 236, 710, 236, C.blue, 'ab');
+  drawLine(paths, 780, 236, 810, 236, C.blue, 'ab');
+  drawLine(paths, 848, 218, 848, 145, C.blue, 'ab');
+
+  animatePath(paths.selectAll('line, path'), 400);
+}
+
+function renderERDiagram() {
+  if (rendered['er']) return; rendered['er'] = true;
+  const svg = createSVG('#er-diagram', 340, 320);
+  if (!svg) return;
+  drawArrowMarker(svg, 'aer', C.accent);
+
+  const nodes = svg.append('g');
+
+  // UserStreaks entity
+  const us = nodes.append('g').attr('transform', 'translate(90, 10)');
+  us.append('rect').attr('width', 160).attr('height', 24).attr('rx', 4)
+    .attr('fill', C.accent).attr('stroke', 'none');
+  us.append('text').attr('x', 80).attr('y', 15).attr('text-anchor', 'middle')
+    .attr('fill', '#fff').attr('font-size', 11).attr('font-weight', 700)
+    .attr('font-family', 'sans-serif').text('UserStreaks');
+  us.append('rect').attr('y', 24).attr('width', 160).attr('height', 94).attr('rx', 0)
+    .attr('fill', C.nodeFill).attr('stroke', C.accent).attr('stroke-width', 1.5);
+  const usFields = ['PK: user_id', 'current_streak', 'longest_streak', 'total_bestie_points', 'last_activity_date', 'tz, version'];
+  usFields.forEach((f, i) => {
+    us.append('text').attr('x', 8).attr('y', 38 + i * 14)
+      .attr('fill', i === 0 ? C.accent : C.text).attr('font-size', 9)
+      .attr('font-family', 'monospace').text(f);
+  });
+
+  // BPEvents entity
+  const bp = nodes.append('g').attr('transform', 'translate(10, 150)');
+  bp.append('rect').attr('width', 140).attr('height', 24).attr('rx', 4)
+    .attr('fill', C.blue).attr('stroke', 'none');
+  bp.append('text').attr('x', 70).attr('y', 15).attr('text-anchor', 'middle')
+    .attr('fill', '#fff').attr('font-size', 11).attr('font-weight', 700)
+    .attr('font-family', 'sans-serif').text('BPEvents');
+  bp.append('rect').attr('y', 24).attr('width', 140).attr('height', 70).attr('rx', 0)
+    .attr('fill', C.nodeFill).attr('stroke', C.blue).attr('stroke-width', 1.5);
+  const bpFields = ['PK: user_id', 'SK: event_id', 'event_type, points', 'idempotency_key, ttl'];
+  bpFields.forEach((f, i) => {
+    bp.append('text').attr('x', 8).attr('y', 38 + i * 14)
+      .attr('fill', i <= 1 ? C.blue : C.text).attr('font-size', 9)
+      .attr('font-family', 'monospace').text(f);
+  });
+
+  // DailyActivity entity
+  const da = nodes.append('g').attr('transform', 'translate(180, 150)');
+  da.append('rect').attr('width', 150).attr('height', 24).attr('rx', 4)
+    .attr('fill', C.green).attr('stroke', 'none');
+  da.append('text').attr('x', 75).attr('y', 15).attr('text-anchor', 'middle')
+    .attr('fill', '#fff').attr('font-size', 11).attr('font-weight', 700)
+    .attr('font-family', 'sans-serif').text('DailyActivity');
+  da.append('rect').attr('y', 24).attr('width', 150).attr('height', 70).attr('rx', 0)
+    .attr('fill', C.nodeFill).attr('stroke', C.green).attr('stroke-width', 1.5);
+  const daFields = ['PK: user_id', 'SK: activity_date', 'first_event_id', 'events_count, points'];
+  daFields.forEach((f, i) => {
+    da.append('text').attr('x', 8).attr('y', 38 + i * 14)
+      .attr('fill', i <= 1 ? C.green : C.text).attr('font-size', 9)
+      .attr('font-family', 'monospace').text(f);
+  });
+
+  // Relationship lines
+  const rels = svg.append('g');
+  // UserStreaks → BPEvents
+  rels.append('line').attr('x1', 130).attr('y1', 104).attr('x2', 80).attr('y2', 150)
+    .attr('stroke', C.blue).attr('stroke-width', 1.5).attr('stroke-dasharray', '4,3');
+  drawLabel(rels, 85, 130, 'earns', C.blue, 9);
+  // UserStreaks → DailyActivity
+  rels.append('line').attr('x1', 210).attr('y1', 104).attr('x2', 255).attr('y2', 150)
+    .attr('stroke', C.green).attr('stroke-width', 1.5).attr('stroke-dasharray', '4,3');
+  drawLabel(rels, 250, 130, 'tracks', C.green, 9);
+
+  animateNodes(nodes.selectAll('g'), 0);
+  animatePath(rels.selectAll('line'), 300);
+}
+
+function renderDedupDiagram() {
+  if (rendered['dedup']) return; rendered['dedup'] = true;
+  const svg = createSVG('#dedup-diagram', 800, 200);
+  if (!svg) return;
+  drawArrowMarker(svg, 'adg', C.green);
+  drawArrowMarker(svg, 'adr', C.accent);
+  drawArrowMarker(svg, 'adb', C.blue);
+
+  const nodes = svg.append('g');
+
+  drawRoundedRect(nodes, 10, 75, 90, 36, 'Incoming\nEvent', C.text);
+  drawDiamond(nodes, 130, 55, 120, 80, 'Layer 1:\nHas idemp.\nkey?', C.accent);
+  drawDiamond(nodes, 285, 55, 120, 80, 'Layer 2:\nGSI lookup\nexists?', C.blue);
+  drawDiamond(nodes, 445, 55, 120, 80, 'Layer 3:\nConditional\nPutItem', C.accent);
+  drawRoundedRect(nodes, 610, 75, 90, 36, 'Process\nEvent', C.green, {fill: '#0a2a1a'});
+  drawRoundedRect(nodes, 285, 165, 100, 30, 'Reject 400', C.accent, {fill: '#2a0a0a'});
+  drawRoundedRect(nodes, 445, 165, 110, 30, 'Cached 200', C.blue, {fill: '#0a1a2a'});
+
+  animateNodes(nodes.selectAll('g'), 0);
+
+  const paths = svg.append('g');
+  // Main flow
+  drawLine(paths, 100, 93, 130, 93, C.green, 'adg');
+  drawLine(paths, 250, 93, 285, 93, C.green, 'adg');
+  drawLine(paths, 405, 93, 445, 93, C.green, 'adg');
+  drawLine(paths, 565, 93, 610, 93, C.green, 'adg');
+  // Reject paths
+  drawLine(paths, 190, 135, 335, 165, C.accent, 'adr');
+  drawLine(paths, 345, 135, 500, 165, C.blue, 'adb');
+  drawLine(paths, 505, 135, 500, 165, C.accent, 'adr');
+
+  // Labels
+  drawLabel(paths, 170, 78, 'Yes', C.green, 9);
+  drawLabel(paths, 330, 78, 'New', C.green, 9);
+  drawLabel(paths, 498, 78, 'OK', C.green, 9);
+  drawLabel(paths, 165, 142, 'No', C.accent, 9);
+  drawLabel(paths, 350, 142, 'Exists', C.blue, 9);
+  drawLabel(paths, 520, 142, 'Fail', C.accent, 9);
+
+  animatePath(paths.selectAll('line'), 400);
+}
+
+function renderStreakDiagram() {
+  if (rendered['streak']) return; rendered['streak'] = true;
+  const svg = createSVG('#streak-diagram', 820, 250);
+  if (!svg) return;
+  drawArrowMarker(svg, 'asg', C.green);
+  drawArrowMarker(svg, 'asb', C.blue);
+  drawArrowMarker(svg, 'asr', C.accent);
+
+  const nodes = svg.append('g');
+  const nw = 85, nh = 34;
+
+  drawRoundedRect(nodes, 10, 95, 80, nh, 'Stream\nEvent', C.text);
+  drawRoundedRect(nodes, 115, 95, 85, nh, 'Read\nUserStreaks', C.blue);
+  drawDiamond(nodes, 225, 72, 110, 80, 'Compare\nlast_activity\nvs today', C.accent);
+  drawRoundedRect(nodes, 355, 25, nw, nh, 'Same day\n→ Skip', '#666', {fill: '#222'});
+  drawRoundedRect(nodes, 355, 95, nw, nh, 'Yesterday\n→ Increment', C.green, {fill: '#0a2a1a'});
+  drawRoundedRect(nodes, 355, 165, nw, nh, 'Older/null\n→ Reset = 1', C.accent, {fill: '#2a0a0a'});
+  drawDiamond(nodes, 465, 72, 100, 80, 'current >\nlongest?', C.blue);
+  drawRoundedRect(nodes, 585, 60, nw, nh, 'Update\nlongest', C.blue);
+  drawRoundedRect(nodes, 585, 130, nw, nh, 'Keep\nlongest', '#666');
+  drawRoundedRect(nodes, 695, 95, 90, nh, 'Conditional\nWrite', C.green);
+
+  animateNodes(nodes.selectAll('g'), 0);
+
+  const paths = svg.append('g');
+  drawLine(paths, 90, 112, 115, 112, C.blue, 'asb');
+  drawLine(paths, 200, 112, 225, 112, C.blue, 'asb');
+  drawLine(paths, 280, 72, 355, 42, '#666');
+  drawLine(paths, 335, 112, 355, 112, C.green, 'asg');
+  drawLine(paths, 280, 152, 355, 182, C.accent, 'asr');
+  drawLine(paths, 440, 112, 465, 112, C.green, 'asg');
+  drawPath(paths, [[440,182],[450,182],[450,120],[465,112]], C.accent, 'asr');
+  drawLine(paths, 515, 72, 585, 77, C.blue, 'asb');
+  drawLine(paths, 515, 152, 585, 147, '#666');
+  drawPath(paths, [[670,77],[685,95],[695,105]], C.green, 'asg');
+  drawPath(paths, [[670,147],[685,130],[695,118]], C.green, 'asg');
+
+  // Labels
+  drawLabel(paths, 305, 66, 'Today', '#666', 8);
+  drawLabel(paths, 305, 108, 'Yesterday', C.green, 8);
+  drawLabel(paths, 305, 158, 'Older', C.accent, 8);
+  drawLabel(paths, 540, 66, 'Yes', C.blue, 8);
+  drawLabel(paths, 540, 158, 'No', '#666', 8);
+
+  // Cache invalidation note
+  drawRoundedRect(nodes, 695, 160, 90, 28, 'Invalidate\nCache', C.accent);
+  drawLine(paths, 740, 129, 740, 160, C.accent, 'asr');
+
+  animatePath(paths.selectAll('line, path'), 400);
+}
+
+function renderCacheDiagram() {
+  if (rendered['cache']) return; rendered['cache'] = true;
+  const svg = createSVG('#cache-diagram', 650, 130);
+  if (!svg) return;
+  drawArrowMarker(svg, 'acg', C.green);
+  drawArrowMarker(svg, 'acb', C.blue);
+  drawArrowMarker(svg, 'acr', C.accent);
+
+  const nodes = svg.append('g');
+
+  drawRoundedRect(nodes, 10, 40, 80, 36, 'App\nRequest', C.text);
+  drawRoundedRect(nodes, 130, 40, 80, 36, 'Lambda', C.green);
+  drawCylinder(nodes, 260, 30, 80, 50, 'Redis\nCache', C.green);
+  drawCylinder(nodes, 400, 30, 90, 50, 'DynamoDB', C.accent);
+  drawRoundedRect(nodes, 540, 40, 80, 36, 'Response', C.green, {fill: '#0a2a1a'});
+
+  animateNodes(nodes.selectAll('g'), 0);
+
+  const paths = svg.append('g');
+  drawLine(paths, 90, 58, 130, 58, C.blue, 'acb');
+  drawLine(paths, 210, 50, 260, 50, C.green, 'acg');
+  drawLine(paths, 210, 66, 260, 66, C.accent, 'acr');
+  drawLine(paths, 340, 58, 400, 58, C.accent, 'acr');
+  drawLine(paths, 490, 58, 540, 58, C.green, 'acg');
+
+  drawLabel(paths, 236, 44, 'Hit?', C.green, 9);
+  drawLabel(paths, 236, 80, 'Miss', C.accent, 9);
+  drawLabel(paths, 370, 46, 'Fallback', C.accent, 8);
+  // Write-through arrow back to Redis
+  drawPath(paths, [[445,80],[445,100],[300,100],[300,80]], C.blue, 'acb');
+  drawLabel(paths, 370, 112, 'Write-through', C.blue, 8);
+
+  animatePath(paths.selectAll('line, path'), 300);
+}
+
+function renderBatchDiagram() {
+  if (rendered['batch']) return; rendered['batch'] = true;
+  const svg = createSVG('#batch-diagram', 800, 90);
+  if (!svg) return;
+  drawArrowMarker(svg, 'abb', C.blue);
+
+  const nodes = svg.append('g');
+
+  drawRoundedRect(nodes, 5, 20, 80, 36, 'DDB\nStreams', C.blue);
+  drawRoundedRect(nodes, 115, 20, 90, 36, 'Kinesis\nFirehose', C.blue);
+  drawCylinder(nodes, 240, 15, 80, 45, 'S3 Raw\n(Parquet)', C.blue);
+  drawRoundedRect(nodes, 355, 20, 80, 36, 'Glue\nETL', C.blue);
+  drawCylinder(nodes, 470, 15, 85, 45, 'S3 Curated\n(Parquet)', C.blue);
+  drawCylinder(nodes, 595, 15, 80, 45, 'Redshift', C.accent);
+  drawRoundedRect(nodes, 710, 20, 70, 36, 'Views &\nBI', C.accent);
+
+  animateNodes(nodes.selectAll('g'), 0);
+
+  const paths = svg.append('g');
+  drawLine(paths, 85, 38, 115, 38, C.blue, 'abb');
+  drawLine(paths, 205, 38, 240, 38, C.blue, 'abb');
+  drawLine(paths, 320, 38, 355, 38, C.blue, 'abb');
+  drawLine(paths, 435, 38, 470, 38, C.blue, 'abb');
+  drawLine(paths, 555, 38, 595, 38, C.blue, 'abb');
+  drawLine(paths, 675, 38, 710, 38, C.accent, 'abb');
+
+  animatePath(paths.selectAll('line'), 300);
+}
+
+function renderReconciliationDiagram() {
+  if (rendered['recon']) return; rendered['recon'] = true;
+  const svg = createSVG('#reconciliation-diagram', 300, 280);
+  if (!svg) return;
+  drawArrowMarker(svg, 'arg', C.green);
+  drawArrowMarker(svg, 'arr', C.accent);
+  drawArrowMarker(svg, 'arb', C.blue);
+
+  const nodes = svg.append('g');
+
+  drawRoundedRect(nodes, 90, 5, 120, 28, 'Nightly Trigger', C.blue);
+  drawRoundedRect(nodes, 30, 55, 100, 28, 'Read\nDailyActivity', C.blue);
+  drawRoundedRect(nodes, 170, 55, 100, 28, 'Read Redshift\nSummaries', C.blue);
+  drawDiamond(nodes, 90, 105, 120, 60, 'Streaks\nmatch?', C.accent);
+  drawRoundedRect(nodes, 10, 190, 90, 28, 'All consistent', C.green, {fill: '#0a2a1a'});
+  drawDiamond(nodes, 150, 185, 110, 55, 'Auto-\nfixable?', C.accent);
+  drawRoundedRect(nodes, 120, 252, 80, 24, 'Fix + audit', C.green, {fill: '#0a2a1a'});
+  drawRoundedRect(nodes, 210, 252, 80, 24, 'Alert on-call', C.accent, {fill: '#2a0a0a'});
+
+  animateNodes(nodes.selectAll('g'), 0);
+
+  const paths = svg.append('g');
+  drawLine(paths, 150, 33, 150, 55, C.blue, 'arb');
+  drawPath(paths, [[150,33],[80,42],[80,55]], C.blue, 'arb');
+  drawPath(paths, [[150,33],[220,42],[220,55]], C.blue, 'arb');
+  drawLine(paths, 80, 83, 130, 105, C.blue, 'arb');
+  drawLine(paths, 220, 83, 170, 105, C.blue, 'arb');
+  drawLine(paths, 110, 165, 55, 190, C.green, 'arg');
+  drawLine(paths, 195, 165, 205, 185, C.accent, 'arr');
+  drawLine(paths, 175, 240, 160, 252, C.green, 'arg');
+  drawLine(paths, 235, 240, 250, 252, C.accent, 'arr');
+
+  drawLabel(paths, 95, 175, 'Yes', C.green, 8);
+  drawLabel(paths, 210, 175, 'No', C.accent, 8);
+  drawLabel(paths, 155, 248, 'Yes', C.green, 8);
+  drawLabel(paths, 250, 248, 'No', C.accent, 8);
+
+  animatePath(paths.selectAll('line, path'), 300);
+}
+
+function renderTZDiagram() {
+  if (rendered['tz']) return; rendered['tz'] = true;
+  const svg = createSVG('#tz-diagram', 650, 80);
+  if (!svg) return;
+
+  const g = svg.append('g');
+
+  // Timeline bar
+  g.append('rect').attr('x', 40).attr('y', 30).attr('width', 570).attr('height', 4)
+    .attr('fill', '#444').attr('rx', 2);
+
+  // Midnight markers
+  const midnight1x = 200, midnight2x = 420;
+  g.append('line').attr('x1', midnight1x).attr('y1', 10).attr('x2', midnight1x).attr('y2', 50)
+    .attr('stroke', C.accent).attr('stroke-width', 2).attr('stroke-dasharray', '4,3');
+  g.append('text').attr('x', midnight1x).attr('y', 68).attr('text-anchor', 'middle')
+    .attr('fill', C.accent).attr('font-size', 10).attr('font-family', 'sans-serif').text('Midnight UTC');
+
+  g.append('line').attr('x1', midnight2x).attr('y1', 10).attr('x2', midnight2x).attr('y2', 50)
+    .attr('stroke', C.green).attr('stroke-width', 2).attr('stroke-dasharray', '4,3');
+  g.append('text').attr('x', midnight2x).attr('y', 68).attr('text-anchor', 'middle')
+    .attr('fill', C.green).attr('font-size', 10).attr('font-family', 'sans-serif').text('Midnight SP (UTC-3)');
+
+  // Event marker
+  const evtX = 370;
+  g.append('circle').attr('cx', evtX).attr('cy', 32).attr('r', 6)
+    .attr('fill', C.accent).attr('stroke', '#fff').attr('stroke-width', 1.5);
+  g.append('text').attr('x', evtX).attr('y', 18).attr('text-anchor', 'middle')
+    .attr('fill', C.text).attr('font-size', 9).attr('font-family', 'sans-serif').text('23:30 SP = 02:30 UTC');
+
+  // Date labels
+  g.append('text').attr('x', 100).attr('y', 24).attr('text-anchor', 'middle')
+    .attr('fill', '#888').attr('font-size', 10).attr('font-family', 'sans-serif').text('Mar 15');
+  g.append('text').attr('x', 520).attr('y', 24).attr('text-anchor', 'middle')
+    .attr('fill', '#888').attr('font-size', 10).attr('font-family', 'sans-serif').text('Mar 16');
+
+  animateNodes(g.selectAll('*'), 0);
+}
+
+// ── Reveal.js Setup ──────────────────────────────────────────────────────
+
+Reveal.initialize({
+  hash: true,
+  width: 960,
+  height: 700,
+  margin: 0.04,
+  transition: 'slide',
+  plugins: [RevealHighlight, RevealNotes]
+}).then(() => {
+  // Render diagram for initial slide if applicable
+  const idx = Reveal.getIndices().h;
+  triggerDiagram(idx);
+});
+
+Reveal.on('slidechanged', event => {
+  triggerDiagram(event.indexh);
+});
+
+function triggerDiagram(idx) {
+  switch(idx) {
+    case 2: renderArchDiagram(); break;
+    case 3: renderERDiagram(); break;
+    case 5: renderDedupDiagram(); break;
+    case 6: renderTZDiagram(); break;
+    case 7: renderStreakDiagram(); break;
+    case 8: renderCacheDiagram(); break;
+    case 9: renderBatchDiagram(); break;
+    case 10: renderReconciliationDiagram(); break;
+  }
+}
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@ This document presents a **production-grade architecture** for Luzia's **Streaks
 |---|---|
 | **Streak tracking** | Per-user daily activity detection with timezone-aware reset logic |
 | **Bestie Points** | Event-driven point accrual from conversations and tool usage |
-| **Scale** | Millions of DAU, global distribution, sub-100ms reads |
+| **Scale** | Millions of DAU, global distribution, sub-10ms reads |
 | **Real-time** | Instant streak/BP updates reflected in the mobile app |
 | **Analytics** | Historical data warehouse for product and business intelligence |
 
